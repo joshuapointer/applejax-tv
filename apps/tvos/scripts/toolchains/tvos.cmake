@@ -39,12 +39,15 @@ if(NOT DEFINED CMAKE_OSX_ARCHITECTURES)
     endif()
 endif()
 
-# Xcode-specific attributes.
+# Xcode-specific attributes (kept for compatibility if generator is switched to Xcode).
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH NO)
 set(CMAKE_XCODE_ATTRIBUTE_SKIP_INSTALL NO)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE NO)
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "")
 set(CMAKE_XCODE_ATTRIBUTE_TVOS_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+
+# For Unix Makefiles cross-compilation: tell CMake we're cross-compiling.
+set(CMAKE_CROSSCOMPILING TRUE)
 
 # Force static, GLES, no shared lib, no frontends, no tests, no install.
 set(BUILD_SHARED_LIBS               OFF CACHE BOOL "" FORCE)

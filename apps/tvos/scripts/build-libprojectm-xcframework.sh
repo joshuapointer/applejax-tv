@@ -43,27 +43,29 @@ configure_and_build() {
     local sdk="$1"      # appletvos | appletvsimulator
     local build_dir="${BUILD_ROOT}/${sdk}"
 
+    # Resolve the SDK path for the cross-compilation sysroot.
+    local sdk_path
+    sdk_path="$(xcrun --sdk "${sdk}" --show-sdk-path)"
+
     echo "=== Configuring ${sdk} ==="
+    # Use Unix Makefiles instead of Xcode generator to avoid the "new build system"
+    # error where custom commands (GenerateScanner) are attached to multiple targets.
     cmake -S "${REPO_ROOT}" -B "${build_dir}" \
-        -G Xcode \
+        -G "Unix Makefiles" \
         -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN}" \
-        -DCMAKE_OSX_SYSROOT="${sdk}" \
+        -DCMAKE_OSX_SYSROOT="${sdk_path}" \
         -DCMAKE_BUILD_TYPE=Release
 
     echo "=== Building ${sdk} ==="
-    cmake --build "${build_dir}" --config Release --target "${CMAKE_TARGET}" -- -quiet
+    cmake --build "${build_dir}" --config Release --target "${CMAKE_TARGET}" -j "$(sysctl -n hw.ncpu)"
 }
 
 find_archive() {
     local sdk="$1"
     local build_dir="${BUILD_ROOT}/${sdk}"
-    # CMake with Xcode generator puts artifacts under <build>/<path-to-target>/Release-<sdk>/
+    # Unix Makefiles generator puts the lib directly under src/libprojectM/
     local candidate
-    candidate=$(find "${build_dir}" -type f -name "${LIB_ARCHIVE_NAME}" -path "*Release-${sdk}*" | head -n 1)
-    if [[ -z "${candidate}" ]]; then
-        # Fallback: any Release-* directory
-        candidate=$(find "${build_dir}" -type f -name "${LIB_ARCHIVE_NAME}" | head -n 1)
-    fi
+    candidate=$(find "${build_dir}" -type f -name "${LIB_ARCHIVE_NAME}" | head -n 1)
     if [[ -z "${candidate}" ]]; then
         echo "ERROR: could not locate ${LIB_ARCHIVE_NAME} under ${build_dir}" >&2
         exit 1
@@ -81,17 +83,28 @@ echo "=== Creating XCFramework ==="
 echo "Device lib:    ${DEVICE_LIB}"
 echo "Simulator lib: ${SIM_LIB}"
 
-# Headers come from the public API include directory.
-HEADERS_DIR="${REPO_ROOT}/src/api/include"
-if [[ ! -d "${HEADERS_DIR}/projectM-4" ]]; then
-    echo "ERROR: expected headers at ${HEADERS_DIR}/projectM-4" >&2
+# Headers: merge the static API headers with the CMake-generated headers (export macros, version).
+HEADERS_SRC="${REPO_ROOT}/src/api/include"
+if [[ ! -d "${HEADERS_SRC}/projectM-4" ]]; then
+    echo "ERROR: expected headers at ${HEADERS_SRC}/projectM-4" >&2
     exit 1
+fi
+
+# Stage a merged headers directory so xcodebuild -create-xcframework gets everything.
+MERGED_HEADERS="${BUILD_ROOT}/merged-headers"
+rm -rf "${MERGED_HEADERS}"
+mkdir -p "${MERGED_HEADERS}/projectM-4"
+cp "${HEADERS_SRC}"/projectM-4/*.h "${MERGED_HEADERS}/projectM-4/"
+# Copy generated headers (projectM_export.h, version.h, etc.) from the device build.
+DEVICE_GEN="${BUILD_ROOT}/appletvos/src/api/include/projectM-4"
+if [[ -d "${DEVICE_GEN}" ]]; then
+    cp "${DEVICE_GEN}"/*.h "${MERGED_HEADERS}/projectM-4/"
 fi
 
 rm -rf "${XCFRAMEWORK_PATH}"
 xcodebuild -create-xcframework \
-    -library "${DEVICE_LIB}" -headers "${HEADERS_DIR}" \
-    -library "${SIM_LIB}"    -headers "${HEADERS_DIR}" \
+    -library "${DEVICE_LIB}" -headers "${MERGED_HEADERS}" \
+    -library "${SIM_LIB}"    -headers "${MERGED_HEADERS}" \
     -output "${XCFRAMEWORK_PATH}"
 
 echo ""

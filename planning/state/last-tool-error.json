@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls -la /Users/joshpointer/Developer/projectm/.omc/plans/ 2>&1 && echo \\\"---\\\" && wc -l /Users/joshpointer/Developer/projectm/.omc/plans/autopilot-impl.md 2>/dev/null\",\"description\":\"Check ...",
+  "error": "Exit code 1\n---",
+  "timestamp": "2026-04-17T21:57:35.664Z",
+  "retry_count": 1
+}
