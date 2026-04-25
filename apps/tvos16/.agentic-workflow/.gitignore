@@ -1,0 +1,18 @@
+# Agentic Workflow - Selective Git Tracking
+# Only preserved artifacts are tracked, all else is ignored
+
+# Ignore everything by default
+*
+
+# Except the artifacts directory structure
+!artifacts/
+!artifacts/*/
+!artifacts/*/02-design/
+!artifacts/*/10-documentation/
+
+# Only track preserved artifacts (after housekeeping)
+!artifacts/*/02-design/architecture-diagram.md
+!artifacts/*/10-documentation/api-docs.md
+
+# Keep this .gitignore
+!.gitignore

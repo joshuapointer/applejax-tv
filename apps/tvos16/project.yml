@@ -3,13 +3,13 @@ name: projectm-tv
 options:
   bundleIdPrefix: com.joshpointer
   deploymentTarget:
-    tvOS: "16.0"
+    tvOS: "26.0"
 
 targets:
   projectm-tv:
     type: application
     platform: tvOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "26.0"
     sources:
       - projectm-tv
     settings:
@@ -30,7 +30,9 @@ targets:
       - framework: Frameworks/libprojectM.xcframework
         embed: false
       - sdk: OpenGLES.framework
-      - sdk: GLKit.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: CoreVideo.framework
       - sdk: AVFoundation.framework
       - sdk: GameController.framework
       - sdk: CoreMedia.framework

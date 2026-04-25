@@ -1,12 +1,14 @@
 import UIKit
-import GLKit
+import Metal
+import MetalKit
 import OpenGLES
 
-final class VisualizerViewController: UIViewController, GLKViewDelegate {
-    private var glContext: EAGLContext?
-    private var glkView: GLKView?
-    private var displayLink: DisplayLinkDriver?
-    private var renderer: ProjectMRenderer?
+final class VisualizerViewController: UIViewController, MTKViewDelegate {
+    private var metalDevice: MTLDevice?
+    private var mtkView: MTKView?
+    private var bridge: GLMetalBridge?
+    private var metalRenderer: MetalRenderer?
+    private var projectMRenderer: ProjectMRenderer?
     private var isSetUp = false
 
     // Injected from outside
@@ -24,84 +26,136 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        setupGL()
+        setupMetal()
         setupInput()
         loadFirstPreset()
 
-        // Background/foreground observers
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground),
                                                name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground),
                                                name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
-    private func setupGL() {
-        guard let context = EAGLContextFactory.makeContext() else {
-            logger.error("Cannot create EAGL context — fatal")
-            showFatalError("OpenGL ES 3.0 not available")
+    // MARK: - Setup
+
+    private func setupMetal() {
+        // 1. Metal device
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            logger.error("Metal is not available on this device")
+            showFatalError("Metal not available")
             return
         }
-        glContext = context
-        EAGLContext.setCurrent(context)
+        self.metalDevice = device
 
-        let glView = GLKView(frame: view.bounds, context: context)
-        glView.delegate = self
-        glView.drawableColorFormat = .RGBA8888
-        glView.drawableDepthFormat = .format24
-        glView.drawableStencilFormat = .format8
-        glView.drawableMultisample = .multisampleNone
-        glView.enableSetNeedsDisplay = true
-        glView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        glView.contentScaleFactor = view.window?.screen.nativeScale ?? UIScreen.main.nativeScale
-        view.addSubview(glView)
-        self.glkView = glView
+        // 2. GL↔Metal bridge (creates EAGLContext + texture caches)
+        guard let glMetalBridge = GLMetalBridge(device: device) else {
+            logger.error("Failed to create GLMetalBridge")
+            showFatalError("GL/Metal bridge failed")
+            return
+        }
+        self.bridge = glMetalBridge
 
-        let scale = glView.contentScaleFactor
+        // 3. Metal renderer (pipeline state + command queue)
+        guard let mtlRenderer = MetalRenderer(device: device) else {
+            logger.error("Failed to create MetalRenderer")
+            showFatalError("Metal renderer failed")
+            return
+        }
+        self.metalRenderer = mtlRenderer
+
+        // 4. projectM renderer (requires GL context current)
+        EAGLContext.setCurrent(glMetalBridge.glContext)
+
+        let scale = view.window?.screen.nativeScale ?? UIScreen.main.nativeScale
         guard let pmRenderer = ProjectMRenderer(viewportSize: view.bounds.size, scale: scale) else {
             logger.error("Failed to create ProjectMRenderer")
             showFatalError("Rendering engine failed to start")
             return
         }
-        self.renderer = pmRenderer
-        isSetUp = true
+        self.projectMRenderer = pmRenderer
 
-        // Allocate drain buffer
+        // 5. MTKView (presentation surface)
+        let metalView = MTKView(frame: view.bounds, device: device)
+        metalView.delegate = self
+        metalView.colorPixelFormat = .bgra8Unorm
+        metalView.framebufferOnly = true
+        metalView.preferredFramesPerSecond = 60
+        metalView.autoResizeDrawable = true
+        metalView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        metalView.contentScaleFactor = scale
+        view.addSubview(metalView)
+        self.mtkView = metalView
+
+        // 6. Initial resize of the bridge to match drawable
+        let drawableSize = metalView.drawableSize
+        glMetalBridge.resize(width: Int(drawableSize.width), height: Int(drawableSize.height))
+        pmRenderer.setViewport(width: Int(drawableSize.width), height: Int(drawableSize.height))
+
+        // 7. Allocate PCM drain buffer
         pcmDrainBuffer = .allocate(capacity: maxSamples * 2)
 
-        // Start display link with audio drain
-        let driver = DisplayLinkDriver()
-        driver.start { [weak self] in
-            self?.tick()
-        }
-        self.displayLink = driver
-
-        renderLogger.info("GL setup complete, display link started")
+        isSetUp = true
+        renderLogger.info("Metal setup complete, MTKView rendering at \(Int(drawableSize.width))x\(Int(drawableSize.height))")
     }
 
-    private func tick() {
-        guard isSetUp else { return }
+    // MARK: - MTKViewDelegate
 
-        // Drain PCM from ring buffer into projectM
+    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+        guard isSetUp else { return }
+        let w = Int(size.width)
+        let h = Int(size.height)
+
+        EAGLContext.setCurrent(bridge?.glContext)
+        bridge?.resize(width: w, height: h)
+        projectMRenderer?.setViewport(width: w, height: h)
+        renderLogger.info("Drawable resized to \(w)x\(h)")
+    }
+
+    func draw(in view: MTKView) {
+        guard isSetUp,
+              let bridge,
+              let projectMRenderer,
+              let metalRenderer else { return }
+
+        // 1. Make GL context current
+        EAGLContext.setCurrent(bridge.glContext)
+
+        // 2. Get next framebuffer from triple-buffer pool
+        guard let (fbo, pixelBuffer) = bridge.nextFramebuffer() else { return }
+
+        // 3. Drain PCM from ring buffer into projectM
         if let ringBuffer = audioController?.ringBuffer,
            let drainBuf = pcmDrainBuffer {
             let framesRead = ringBuffer.read(into: drainBuf, maxFrames: maxSamples)
             if framesRead > 0 {
-                renderer?.addPCM(drainBuf, frameCount: UInt32(framesRead), channels: 2)
+                projectMRenderer.addPCM(drainBuf, frameCount: UInt32(framesRead), channels: 2)
             }
         }
 
-        glkView?.setNeedsDisplay()
+        // 4. GL render (projectM writes to the CVPixelBuffer-backed FBO)
+        projectMRenderer.renderFrame(fbo: fbo)
+
+        // 5. Flush GL — submit commands, don't wait (Metal will read asynchronously)
+        bridge.flush()
+
+        // 6. Get the GL output as a Metal texture (zero-copy)
+        guard let texture = bridge.metalTexture(from: pixelBuffer) else { return }
+
+        // 7. Metal blit to drawable
+        metalRenderer.render(texture: texture, in: view)
     }
+
+    // MARK: - Presets
 
     private func loadFirstPreset() {
         guard let lib = presetLibrary, let url = lib.next() else { return }
-        renderer?.loadPreset(at: url, smooth: false)
+        projectMRenderer?.loadPreset(at: url, smooth: false)
         appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
     }
 
     private func loadSpecificPreset(_ url: URL) {
         presetLibrary?.jumpTo(url)
-        renderer?.loadPreset(at: url, smooth: true)
+        projectMRenderer?.loadPreset(at: url, smooth: true)
         appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
         appState?.isPresetBrowserVisible = false
         inputHandler.setPresetBrowserVisible(false)
@@ -124,18 +178,18 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
         switch command {
         case .nextPreset:
             if let url = presetLibrary?.next() {
-                renderer?.loadPreset(at: url, smooth: true)
+                projectMRenderer?.loadPreset(at: url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .previousPreset:
             if let url = presetLibrary?.previous() {
-                renderer?.loadPreset(at: url, smooth: true)
+                projectMRenderer?.loadPreset(at: url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .toggleLock:
             if let state = appState {
                 state.isLocked.toggle()
-                renderer?.setLocked(state.isLocked)
+                projectMRenderer?.setLocked(state.isLocked)
             }
         case .showOverlay:
             appState?.isOverlayVisible = true
@@ -149,7 +203,7 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
         case .shufflePresets:
             presetLibrary?.shuffle()
             if let url = presetLibrary?.next() {
-                renderer?.loadPreset(at: url, smooth: true)
+                projectMRenderer?.loadPreset(at: url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .showPresetBrowser:
@@ -191,45 +245,31 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
         super.pressesEnded(presses, with: event)
     }
 
-    // MARK: - GLKViewDelegate
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard isSetUp else { return }
-        let scale = glkView?.contentScaleFactor ?? 1.0
-        renderer?.setViewport(size: view.bounds.size, scale: scale)
-    }
-
-    func glkView(_ view: GLKView, drawIn rect: CGRect) {
-        guard isSetUp else { return }
-        var currentFBO: GLint = 0
-        glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &currentFBO)
-        renderer?.renderFrame(intoFBO: currentFBO)
-    }
-
     // MARK: - Lifecycle
 
     @objc private func didEnterBackground() {
-        displayLink?.pause()
-        audioController?.togglePlayPause()  // pause
-        if let ctx = glContext {
+        mtkView?.isPaused = true
+        if let ctx = bridge?.glContext {
             EAGLContext.setCurrent(ctx)
             glFinish()
         }
+        bridge?.flushCaches()
     }
 
     @objc private func willEnterForeground() {
-        if let ctx = glContext {
+        if let ctx = bridge?.glContext {
             EAGLContext.setCurrent(ctx)
         }
-        displayLink?.resume()
+        mtkView?.isPaused = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        displayLink?.stop()
+        mtkView?.isPaused = true
+        mtkView?.delegate = nil
         pcmDrainBuffer?.deallocate()
         pcmDrainBuffer = nil
+        isSetUp = false
     }
 
     private func showFatalError(_ message: String) {
