@@ -8,28 +8,26 @@ struct RootView: View {
             switch appState.phase {
             case .picker:
                 SourcePickerView(onSelectSource: { source in
-                    appState.activeSource = source
-                    appState.persistSource()
-
-                    // Start the appropriate audio source
                     switch source {
                     case .appleMusic:
-                        let musicSource = MusicKitSource(ringBuffer: appState.audioController.ringBuffer)
-                        appState.audioController.activate(musicSource)
+                        appState.phase = .musicBrowser
                     case .localFile, .idle:
-                        // Start with procedural audio for idle mode
-                        let generator = ProceduralPCMGenerator(ringBuffer: appState.audioController.ringBuffer)
-                        generator.start()
+                        // Start procedural beat generator so the visualizer reacts
+                        let gen = ProceduralPCMGenerator(ringBuffer: appState.audioController.ringBuffer)
+                        gen.start()
+                        appState.proceduralGenerator = gen  // hold reference
+                        appState.activeSource = source
+                        appState.phase = .visualizing
                     }
-
-                    appState.phase = .visualizing
                 })
+
+            case .musicBrowser:
+                MusicBrowserView()
 
             case .visualizing:
                 VisualizerContainerView()
                     .ignoresSafeArea()
 
-                // Overlay
                 OverlayView()
             }
         }

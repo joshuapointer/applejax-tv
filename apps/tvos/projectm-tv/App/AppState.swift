@@ -18,6 +18,7 @@ struct NowPlayingInfo {
 final class AppState {
     enum Phase {
         case picker
+        case musicBrowser
         case visualizing
     }
 
@@ -32,6 +33,8 @@ final class AppState {
     // Shared controllers
     let audioController = AudioController()
     let presetLibrary = PresetLibrary()
+    var musicKitSource: MusicKitSource?
+    var proceduralGenerator: ProceduralPCMGenerator?
 
     func recordInteraction() {
         lastInteractionTime = CACurrentMediaTime()
@@ -42,12 +45,9 @@ final class AppState {
         UserDefaults.standard.set(activeSource.rawValue, forKey: "lastSourceMode")
     }
 
-    /// Restore persisted state
+    /// Restore persisted state. Always starts at picker — user must choose.
     func restore() {
-        if let raw = UserDefaults.standard.string(forKey: "lastSourceMode"),
-           let source = SourceKind(rawValue: raw), source != .idle {
-            activeSource = source
-            phase = .visualizing
-        }
+        // Clear any stale defaults so we always show the picker
+        phase = .picker
     }
 }
