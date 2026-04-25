@@ -15,7 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-OUT_DIR="${REPO_ROOT}/apps/tvos/Frameworks"
+OUT_DIR="${REPO_ROOT}/apps/tvos16/Frameworks"
 BUILD_ROOT="${REPO_ROOT}/build-tvos"
 TOOLCHAIN="${SCRIPT_DIR}/toolchains/tvos.cmake"
 XCFRAMEWORK_NAME="libprojectM.xcframework"
