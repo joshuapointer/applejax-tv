@@ -99,11 +99,22 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
         appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
     }
 
+    private func loadSpecificPreset(_ url: URL) {
+        presetLibrary?.jumpTo(url)
+        renderer?.loadPreset(at: url, smooth: true)
+        appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
+        appState?.isPresetBrowserVisible = false
+        inputHandler.setPresetBrowserVisible(false)
+    }
+
     // MARK: - Input
 
     private func setupInput() {
         inputHandler.onCommand = { [weak self] command in
             self?.handleCommand(command)
+        }
+        appState?.onLoadPreset = { [weak self] url in
+            self?.loadSpecificPreset(url)
         }
     }
 
@@ -135,6 +146,18 @@ final class VisualizerViewController: UIViewController, GLKViewDelegate {
             inputHandler.setOverlayVisible(false)
         case .togglePlayPause:
             audioController?.togglePlayPause()
+        case .shufflePresets:
+            presetLibrary?.shuffle()
+            if let url = presetLibrary?.next() {
+                renderer?.loadPreset(at: url, smooth: true)
+                appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
+            }
+        case .showPresetBrowser:
+            appState?.isPresetBrowserVisible = true
+            inputHandler.setPresetBrowserVisible(true)
+        case .hidePresetBrowser:
+            appState?.isPresetBrowserVisible = false
+            inputHandler.setPresetBrowserVisible(false)
         }
     }
 

@@ -29,6 +29,11 @@ struct RootView: View {
                     .ignoresSafeArea()
 
                 OverlayView()
+
+                if appState.isPresetBrowserVisible {
+                    PresetBrowserView()
+                        .ignoresSafeArea()
+                }
             }
         }
         .task {

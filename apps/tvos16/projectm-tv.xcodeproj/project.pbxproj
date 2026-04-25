@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0475F82EC600819C21D943F6 /* PresetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B527478651FEC90AB4E4F181 /* PresetLibrary.swift */; };
+		7BE9DEC9626441C9B22BC5A18EA7B733 /* PresetBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */; };
+		F19CA035CB724EB7B270F11501E7F89E /* presets in Resources */ = {isa = PBXBuildFile; fileRef = 24DB83E0501441A5B9F1AD7652702E31 /* presets */; };
 		2094CFF222EEBA5A38D2B23D /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */; };
 		2306A73E68AD76F47FB0BFB6 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EDF7604856BF331BAA1E057C /* CoreMedia.framework */; };
 		2C250299439EAFE7460D91AC /* InputCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */; };
@@ -43,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		01AE67FF24E82876E63F5316 /* BPMEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPMEstimator.swift; sourceTree = "<group>"; };
+		49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetBrowserView.swift; sourceTree = "<group>"; };
 		0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngineSource.swift; sourceTree = "<group>"; };
 		0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInputHandler.swift; sourceTree = "<group>"; };
 		130FF7216F5CE458FB5EAF8A /* AudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioController.swift; sourceTree = "<group>"; };
@@ -78,6 +81,7 @@
 		EDF7604856BF331BAA1E057C /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		24DB83E0501441A5B9F1AD7652702E31 /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = presets; path = "../Resources/presets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +145,7 @@
 				AAEDCF9D3900E61642FF91C0 /* AcknowledgementsView.swift */,
 				A4D97ECC1B577142DE0697C2 /* MusicBrowserView.swift */,
 				F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */,
+				49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */,
 				B3D8B1F1E14D95C27095A049 /* RootView.swift */,
 				22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */,
 				89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */,
@@ -159,6 +164,7 @@
 		323FC9E8A1468F05BEF83CCB /* projectm-tv */ = {
 			isa = PBXGroup;
 			children = (
+				24DB83E0501441A5B9F1AD7652702E31 /* presets */,
 				FA20882B178157A3ACD5DAF5 /* Assets.xcassets */,
 				CC29242D152262F8F9F36BCF /* Info.plist */,
 				D94C3C6F7F3025F3BF023B5D /* projectm_tv.entitlements */,
@@ -276,6 +282,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */,
+				F19CA035CB724EB7B270F11501E7F89E /* presets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,6 +293,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BE9DEC9626441C9B22BC5A18EA7B733 /* PresetBrowserView.swift in Sources */,
 				4813C20AED89721450B98D58 /* AcknowledgementsView.swift in Sources */,
 				FE2EF29C95E18C6A3DA57353 /* AppState.swift in Sources */,
 				5F1BBE89F97A4C8C64F8FD21 /* AudioController.swift in Sources */,

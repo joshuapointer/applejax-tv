@@ -24,6 +24,7 @@ final class AppState: ObservableObject {
     @Published var activeSource: SourceKind = .idle
     @Published var isLocked: Bool = false
     @Published var isOverlayVisible: Bool = false
+    @Published var isPresetBrowserVisible: Bool = false
     @Published var nowPlaying: NowPlayingInfo?
     @Published var currentPresetName: String = "(none)"
     @Published var lastInteractionTime: TimeInterval = CACurrentMediaTime()
@@ -31,6 +32,9 @@ final class AppState: ObservableObject {
     // Shared controllers
     let audioController = AudioController()
     let presetLibrary = PresetLibrary()
+
+    /// Set by VisualizerViewController to load a specific preset on demand.
+    var onLoadPreset: ((URL) -> Void)?
     @Published var musicKitSource: MusicKitSource?
     @Published var proceduralGenerator: ProceduralPCMGenerator?
 

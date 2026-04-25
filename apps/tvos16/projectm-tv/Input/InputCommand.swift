@@ -8,4 +8,7 @@ enum InputCommand {
     case showOverlay
     case hideOverlay
     case togglePlayPause
+    case shufflePresets
+    case showPresetBrowser
+    case hidePresetBrowser
 }

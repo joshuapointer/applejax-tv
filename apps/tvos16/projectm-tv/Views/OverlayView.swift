@@ -24,6 +24,15 @@ struct OverlayView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
+                // Controls hint
+                HStack(spacing: 16) {
+                    Label("Browse", systemImage: "chevron.up")
+                    Label("Shuffle", systemImage: "chevron.down")
+                    Label("←/→ Skip", systemImage: "arrow.left.arrow.right")
+                }
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+
                 // Now playing
                 if let np = appState.nowPlaying, !np.title.isEmpty {
                     Divider()

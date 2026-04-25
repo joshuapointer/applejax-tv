@@ -9,9 +9,14 @@ final class RemoteInputHandler {
     private var lastPresetCommandTime: TimeInterval = 0
     private let debounceInterval: TimeInterval = 0.1  // 100ms
     private var isOverlayVisible: Bool = false
+    private var isPresetBrowserVisible: Bool = false
 
     func setOverlayVisible(_ visible: Bool) {
         isOverlayVisible = visible
+    }
+
+    func setPresetBrowserVisible(_ visible: Bool) {
+        isPresetBrowserVisible = visible
     }
 
     /// Process a press event. Returns true if the event was handled (don't call super).
@@ -25,10 +30,23 @@ final class RemoteInputHandler {
             return emitDebounced(.previousPreset)
         case .rightArrow:
             return emitDebounced(.nextPreset)
+        case .upArrow:
+            if isPresetBrowserVisible {
+                onCommand?(.hidePresetBrowser)
+            } else {
+                onCommand?(.showPresetBrowser)
+            }
+            return true
+        case .downArrow:
+            return emitDebounced(.shufflePresets)
         case .select:
             onCommand?(.toggleLock)
             return true
         case .menu:
+            if isPresetBrowserVisible {
+                onCommand?(.hidePresetBrowser)
+                return true
+            }
             if isOverlayVisible {
                 onCommand?(.hideOverlay)
             } else {

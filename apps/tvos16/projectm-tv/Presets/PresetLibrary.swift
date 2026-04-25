@@ -20,6 +20,28 @@ final class PresetLibrary {
     var count: Int { shuffled.count }
     var isEmpty: Bool { shuffled.isEmpty }
 
+    /// All presets grouped by their immediate parent folder name, sorted alphabetically.
+    var categories: [(name: String, presets: [URL])] {
+        var groups: [String: [URL]] = [:]
+        for url in allPresets {
+            let category = url.deletingLastPathComponent().lastPathComponent
+            groups[category, default: []].append(url)
+        }
+        return groups
+            .map { (name: $0.key, presets: $0.value.sorted { $0.lastPathComponent < $1.lastPathComponent }) }
+            .sorted { $0.name < $1.name }
+    }
+
+    /// Jump directly to a specific preset URL.
+    @discardableResult
+    func jumpTo(_ url: URL) -> URL {
+        if let idx = shuffled.firstIndex(of: url) {
+            currentIndex = idx
+        }
+        pushHistory(url)
+        return url
+    }
+
     /// Current preset URL, or nil if none loaded.
     var current: URL? {
         guard historyIndex >= 0, historyIndex < history.count else { return nil }
