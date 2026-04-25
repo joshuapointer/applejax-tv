@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"find /Users/j0g19tc/Developer/projectm-tv/.omc/state -type f -name \\\"*.json\\\" 2>&1 | head -20; echo \\\"---SESSION DIRS---\\\"; ls /Users/j0g19tc/Developer/projectm-tv/.omc/state/sessions/ 2>&...",
-  "error": "Exit code 1\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/cancel-signal-state.json\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/last-tool-error.json\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/hud-stdin-cache.json\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/subagent-tracking.json\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/sessions/0b098a78-60c4-45ae-9be7-7d76fdd4ceea/cancel-signal-state.json\n/Users/j0g19tc/Developer/projectm-tv/.omc/state/sessions/0b098a78-60c4-45ae-9be7-7d76fd...",
-  "timestamp": "2026-04-25T22:04:07.627Z",
+  "tool_input_preview": "{\"command\":\"git diff --stat && git diff apps/applejax-control/App.tsx\",\"description\":\"Final diff review before commit\"}",
+  "error": "Exit code 128\n .../applejax-control/.omc/state/mission-state.json |  76 ++++++++++++-\n .../.omc/state/subagent-tracking.json              |  24 ++++-\n apps/applejax-control/App.tsx                      |  44 +++++---\n .../applejax-audio/ios/AppleJaxAudioModule.swift   | 120 ++++++++++++++++-----\n 4 files changed, 222 insertions(+), 42 deletions(-)\nfatal: ambiguous argument 'apps/applejax-control/App.tsx': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions...",
+  "timestamp": "2026-04-25T23:36:00.972Z",
   "retry_count": 1
 }
