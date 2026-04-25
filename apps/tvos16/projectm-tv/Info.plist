@@ -18,6 +18,8 @@
 	<string>1</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>projectM needs access to your Apple Music library to play and visualize tracks.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>AppleJax accepts audio streams from the appleJax Control iPhone companion app on your local network.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>

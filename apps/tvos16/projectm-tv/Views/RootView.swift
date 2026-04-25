@@ -11,7 +11,21 @@ struct RootView: View {
                     switch source {
                     case .appleMusic:
                         appState.phase = .musicBrowser
+                    case .appleJax:
+                        appState.proceduralGenerator?.stop()
+                        appState.proceduralGenerator = nil
+                        let receiver = AppleJaxReceiver(ringBuffer: appState.audioController.ringBuffer)
+                        do {
+                            try receiver.start()
+                            appState.appleJaxReceiver = receiver
+                            appState.activeSource = .appleJax
+                            appState.phase = .visualizing
+                        } catch {
+                            audioLogger.error("AppleJax receiver start failed: \(error.localizedDescription)")
+                        }
                     case .localFile, .idle:
+                        appState.appleJaxReceiver?.stop()
+                        appState.appleJaxReceiver = nil
                         // Start procedural beat generator so the visualizer reacts
                         let gen = ProceduralPCMGenerator(ringBuffer: appState.audioController.ringBuffer)
                         gen.start()

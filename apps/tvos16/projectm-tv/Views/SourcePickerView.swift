@@ -51,6 +51,16 @@ struct SourcePickerView: View {
                         }
                         .frame(maxWidth: 400)
                     }
+
+                    Button {
+                        onSelectSource?(.appleJax)
+                    } label: {
+                        HStack {
+                            Image(systemName: "antenna.radiowaves.left.and.right")
+                            Text("appleJax Companion")
+                        }
+                        .frame(maxWidth: 400)
+                    }
                 }
 
                 if musicAuthStatus == .denied {

@@ -68,6 +68,11 @@ struct OverlayView: View {
         case .idle: return "Idle"
         case .appleMusic: return "Apple Music"
         case .localFile: return "Local File"
+        case .appleJax:
+            if let port = appState.appleJaxReceiver?.listenPort, port > 0 {
+                return "appleJax · :\(port)"
+            }
+            return "appleJax"
         }
     }
 }
