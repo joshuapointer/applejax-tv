@@ -1,9 +1,11 @@
 import Foundation
+import QuartzCore
 
 enum SourceKind: String {
     case idle
     case appleMusic
     case localFile
+    case appleJax
 }
 
 struct NowPlayingInfo {
@@ -37,6 +39,7 @@ final class AppState: ObservableObject {
     var onLoadPreset: ((URL) -> Void)?
     @Published var musicKitSource: MusicKitSource?
     @Published var proceduralGenerator: ProceduralPCMGenerator?
+    @Published var appleJaxReceiver: AppleJaxReceiver?
 
     func recordInteraction() {
         lastInteractionTime = CACurrentMediaTime()

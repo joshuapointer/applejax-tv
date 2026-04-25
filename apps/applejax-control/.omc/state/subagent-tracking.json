@@ -1,0 +1,80 @@
+{
+  "agents": [
+    {
+      "agent_id": "a3a92cef475416bef",
+      "agent_type": "oh-my-claudecode:architect",
+      "started_at": "2026-04-25T21:46:37.884Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T21:47:06.734Z",
+      "duration_ms": 28850
+    },
+    {
+      "agent_id": "a898f60d0f16b4351",
+      "agent_type": "oh-my-claudecode:security-reviewer",
+      "started_at": "2026-04-25T21:46:45.443Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T21:47:10.450Z",
+      "duration_ms": 25007
+    },
+    {
+      "agent_id": "a861c8b2e92674f80",
+      "agent_type": "oh-my-claudecode:code-reviewer",
+      "started_at": "2026-04-25T21:46:54.078Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T21:47:40.148Z",
+      "duration_ms": 46070
+    },
+    {
+      "agent_id": "adaabf1fd8ee5ae85",
+      "agent_type": "oh-my-claudecode:code-reviewer",
+      "started_at": "2026-04-25T21:52:25.604Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T21:52:43.350Z",
+      "duration_ms": 17746
+    },
+    {
+      "agent_id": "aa1923c0328464a42",
+      "agent_type": "oh-my-claudecode:architect",
+      "started_at": "2026-04-25T22:00:42.152Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T22:01:14.112Z",
+      "duration_ms": 31960
+    },
+    {
+      "agent_id": "a75de6151f84624e1",
+      "agent_type": "oh-my-claudecode:security-reviewer",
+      "started_at": "2026-04-25T22:00:49.324Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T22:01:12.625Z",
+      "duration_ms": 23301
+    },
+    {
+      "agent_id": "ae68e280d1f23a602",
+      "agent_type": "oh-my-claudecode:code-reviewer",
+      "started_at": "2026-04-25T22:00:59.674Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T22:01:30.472Z",
+      "duration_ms": 30798
+    },
+    {
+      "agent_id": "a4a7291aed3f8fee0",
+      "agent_type": "oh-my-claudecode:code-reviewer",
+      "started_at": "2026-04-25T22:03:06.798Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-04-25T22:03:34.714Z",
+      "duration_ms": 27916
+    }
+  ],
+  "total_spawned": 8,
+  "total_completed": 8,
+  "total_failed": 0,
+  "last_updated": "2026-04-25T22:03:34.820Z"
+}
