@@ -3,13 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0475F82EC600819C21D943F6 /* PresetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B527478651FEC90AB4E4F181 /* PresetLibrary.swift */; };
-		7BE9DEC9626441C9B22BC5A18EA7B733 /* PresetBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */; };
-		F19CA035CB724EB7B270F11501E7F89E /* presets in Resources */ = {isa = PBXBuildFile; fileRef = 24DB83E0501441A5B9F1AD7652702E31 /* presets */; };
 		2094CFF222EEBA5A38D2B23D /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */; };
 		2306A73E68AD76F47FB0BFB6 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EDF7604856BF331BAA1E057C /* CoreMedia.framework */; };
 		2C250299439EAFE7460D91AC /* InputCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */; };
@@ -23,6 +21,7 @@
 		5F1BBE89F97A4C8C64F8FD21 /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130FF7216F5CE458FB5EAF8A /* AudioController.swift */; };
 		799FDB370D7D9730B230E72F /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */; };
 		7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */; };
+		7BE9DEC9626441C9B22BC5A18EA7B733 /* PresetBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */; };
 		87F5DE962B17BEAC18261345 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A56952D50272E45B00CDE78 /* UIKit.framework */; };
 		90EFE46B9AE298FB48E87E1B /* ProceduralPCMGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E9C43C30CA8F6B217842D7 /* ProceduralPCMGenerator.swift */; };
 		9F1B4AD9881C8FB1FC6288B2 /* MusicKitSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B5A3AD507A10621DA8383D /* MusicKitSource.swift */; };
@@ -37,6 +36,7 @@
 		E841557D488630C18F5EA39A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 633C4F41819226F2A260F069 /* AVFoundation.framework */; };
 		EC494C7902FE6912E5E949B1 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DF55FC02051788FB55D8FC /* GLKit.framework */; };
 		EF6D696C7221BDF07A0D131B /* RemoteInputHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */; };
+		F19CA035CB724EB7B270F11501E7F89E /* presets in Resources */ = {isa = PBXBuildFile; fileRef = 24DB83E0501441A5B9F1AD7652702E31 /* presets */; };
 		F8B1B23FBD566C9046F8700C /* AudioEngineSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */; };
 		FD244167E0A5794ADD4D223A /* libprojectM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */; };
 		FDC2F1A4F2A3C0A1636BD8B0 /* EAGLContextFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA84F2FB188EF7C6B2F5C14 /* EAGLContextFactory.swift */; };
@@ -45,16 +45,17 @@
 
 /* Begin PBXFileReference section */
 		01AE67FF24E82876E63F5316 /* BPMEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPMEstimator.swift; sourceTree = "<group>"; };
-		49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetBrowserView.swift; sourceTree = "<group>"; };
 		0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngineSource.swift; sourceTree = "<group>"; };
 		0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInputHandler.swift; sourceTree = "<group>"; };
 		130FF7216F5CE458FB5EAF8A /* AudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioController.swift; sourceTree = "<group>"; };
 		22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcePickerView.swift; sourceTree = "<group>"; };
 		23DB093954D9DCC7CBE225BB /* PCMRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCMRingBuffer.swift; sourceTree = "<group>"; };
+		24DB83E0501441A5B9F1AD7652702E31 /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = presets; path = ../Resources/presets; sourceTree = "<group>"; };
 		394525C51E47689B9DFEAC4A /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		3A56952D50272E45B00CDE78 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		42BA78CFDA3451C9B4CD7C97 /* projectm-tv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "projectm-tv.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		47E9C43C30CA8F6B217842D7 /* ProceduralPCMGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProceduralPCMGenerator.swift; sourceTree = "<group>"; };
+		49AF267B73724D7392853F216AFF3A6F /* PresetBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetBrowserView.swift; sourceTree = "<group>"; };
 		5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libprojectM.xcframework; path = Frameworks/libprojectM.xcframework; sourceTree = "<group>"; };
 		58B5A3AD507A10621DA8383D /* MusicKitSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicKitSource.swift; sourceTree = "<group>"; };
 		5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectMRenderer.swift; sourceTree = "<group>"; };
@@ -76,12 +77,10 @@
 		B527478651FEC90AB4E4F181 /* PresetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetLibrary.swift; sourceTree = "<group>"; };
 		CC29242D152262F8F9F36BCF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D51CDE95FC1D2E7B91D46285 /* ProjectMTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectMTVApp.swift; sourceTree = "<group>"; };
-		D94C3C6F7F3025F3BF023B5D /* projectm_tv.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = projectm_tv.entitlements; sourceTree = "<group>"; };
 		D9DF55FC02051788FB55D8FC /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		EDF7604856BF331BAA1E057C /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		24DB83E0501441A5B9F1AD7652702E31 /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = presets; path = "../Resources/presets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,7 +166,6 @@
 				24DB83E0501441A5B9F1AD7652702E31 /* presets */,
 				FA20882B178157A3ACD5DAF5 /* Assets.xcassets */,
 				CC29242D152262F8F9F36BCF /* Info.plist */,
-				D94C3C6F7F3025F3BF023B5D /* projectm_tv.entitlements */,
 				EDD15513C88C9B916405B8AF /* App */,
 				2A2CB35E77986198E313F18B /* Audio */,
 				EB5A7079C49AAD7A22F5DC5A /* Input */,
@@ -330,7 +328,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
-				CODE_SIGN_ENTITLEMENTS = "projectm-tv/projectm_tv.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X6N4DF258V;
@@ -484,7 +482,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
-				CODE_SIGN_ENTITLEMENTS = "projectm-tv/projectm_tv.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X6N4DF258V;
