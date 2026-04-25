@@ -29,6 +29,8 @@ export default function App() {
   const [conn, setConn] = useState<ConnState>('disconnected');
   const [status, setStatus] = useState('Idle');
   const [filename, setFilename] = useState<string | null>(null);
+  // Prevents a second tap while startMic/playFile is in-flight (before state event arrives)
+  const [starting, setStarting] = useState(false);
 
   const socketRef = useRef<ReturnType<typeof TcpSocket.createConnection> | null>(null);
   const pausedRef = useRef(false);
@@ -116,12 +118,15 @@ export default function App() {
 
   const startMic = useCallback(async () => {
     try {
+      setStarting(true);
       console.log('[appleJax] startMic called');
       await AppleJaxAudio.startMic();
       console.log('[appleJax] startMic resolved');
     } catch (e) {
       console.error('[appleJax] startMic error:', e);
       Alert.alert('Mic error', String(e));
+    } finally {
+      setStarting(false);
     }
   }, []);
 
@@ -140,11 +145,14 @@ export default function App() {
       const asset = res.assets[0];
       console.log('[appleJax] playFile:', asset.name, asset.uri);
       setFilename(asset.name ?? 'file');
+      setStarting(true);
       await AppleJaxAudio.playFile(asset.uri);
       console.log('[appleJax] playFile resolved');
     } catch (e) {
       console.error('[appleJax] playFile error:', e);
       Alert.alert('File error', String(e));
+    } finally {
+      setStarting(false);
     }
   }, []);
 
@@ -153,7 +161,7 @@ export default function App() {
   }, []);
 
   const isStreaming = mode !== 'idle';
-  const canStart = conn === 'connected' && !isStreaming;
+  const canStart = conn === 'connected' && !isStreaming && !starting;
 
   return (
     <KeyboardAvoidingView
@@ -236,10 +244,7 @@ export default function App() {
 
       <View style={styles.section}>
         <Text style={styles.label}>Level</Text>
-        <LevelMeter rmsRef={rmsRef} />
-        <Text style={styles.meta}>
-          22050 Hz · mono · 1024-frame chunks
-        </Text>
+        <LevelMeter rmsRef={rmsRef} droppedRef={droppedRef} />
       </View>
     </KeyboardAvoidingView>
   );
@@ -248,18 +253,33 @@ export default function App() {
 // Polls rmsRef at 20 Hz and only re-renders this small subtree, so the
 // 21 Hz PCM event stream never re-renders the parent (which contains
 // TextInput controls that drop keystrokes if re-rendered constantly).
-function LevelMeter({ rmsRef }: { rmsRef: React.MutableRefObject<number> }) {
-  const [width, setWidth] = useState(0);
+function LevelMeter({
+  rmsRef,
+  droppedRef,
+}: {
+  rmsRef: React.MutableRefObject<number>;
+  droppedRef: React.MutableRefObject<number>;
+}) {
+  const [display, setDisplay] = useState({ width: 0, dropped: 0 });
   useEffect(() => {
     const id = setInterval(() => {
-      setWidth(Math.min(100, Math.round(rmsRef.current * 400)));
+      setDisplay({
+        width: Math.min(100, Math.round(rmsRef.current * 400)),
+        dropped: droppedRef.current,
+      });
     }, 50);
     return () => clearInterval(id);
-  }, [rmsRef]);
+  }, [rmsRef, droppedRef]);
   return (
-    <View style={styles.meter}>
-      <View style={[styles.meterFill, { width: `${width}%` }]} />
-    </View>
+    <>
+      <View style={styles.meter}>
+        <View style={[styles.meterFill, { width: `${display.width}%` }]} />
+      </View>
+      <Text style={styles.meta}>
+        22050 Hz · mono · 1024-frame chunks
+        {display.dropped > 0 ? ` · ${display.dropped} dropped` : ''}
+      </Text>
+    </>
   );
 }
 

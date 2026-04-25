@@ -6,6 +6,8 @@ import os.log
 private let kSampleRate: Double = 22050
 private let kChannels: AVAudioChannelCount = 1
 private let kFramesPerChunk: AVAudioFrameCount = 1024
+// 2-second back-pressure cap at the output sample rate
+private let kMaxPendingFrames: Int = Int(kSampleRate) * 2
 private let audioLog = os.Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "com.joshpointer.applejax.control",
     category: "AppleJaxAudio"
@@ -18,12 +20,27 @@ public class AppleJaxAudioModule: Module {
     private var pendingFloats: [Float] = []
     private var pendingHead: Int = 0
     private var currentMode: String = "idle"
+    // Incremented by tearDownEngineLocked to invalidate queued tap callbacks from old sessions
+    private var sessionGeneration: UInt64 = 0
+    // Track which taps are installed so teardown is unconditional and correct
+    private var inputTapInstalled = false
+    private var mixerTapInstalled = false
+
     // Serialises all engine/PCM state. Tap callbacks dispatch async onto this queue.
-    // Never call sync from within an async block on this queue.
-    private let engineQueue = DispatchQueue(label: "applejax.audio.engine", qos: .userInteractive)
+    // Use stopAll() instead of engineQueue.sync to avoid deadlock from within the queue.
+    private static let queueKey = DispatchSpecificKey<Void>()
+    private lazy var engineQueue: DispatchQueue = {
+        let q = DispatchQueue(label: "applejax.audio.engine", qos: .userInteractive)
+        q.setSpecific(key: AppleJaxAudioModule.queueKey, value: ())
+        return q
+    }()
 
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
+
+    deinit {
+        removeSessionObservers()
+    }
 
     public func definition() -> ModuleDefinition {
         Name("AppleJaxAudioModule")
@@ -134,7 +151,7 @@ public class AppleJaxAudioModule: Module {
         audioLog.info("Session active: sr=\(session.sampleRate) inCh=\(session.inputNumberOfChannels) outCh=\(session.outputNumberOfChannels)")
     }
 
-    // MARK: - Session observers
+    // MARK: - AVAudioSession notifications
 
     private func registerSessionObservers() {
         removeSessionObservers()
@@ -178,12 +195,17 @@ public class AppleJaxAudioModule: Module {
             let reasonVal = info[AVAudioSessionRouteChangeReasonKey] as? UInt
         else { return }
         audioLog.info("Route changed: reason=\(reasonVal)")
-        if let reason = AVAudioSession.RouteChangeReason(rawValue: reasonVal),
-           reason == .oldDeviceUnavailable {
-            engineQueue.async { [weak self] in
-                guard let self, self.currentMode != "idle" else { return }
+        engineQueue.async { [weak self] in
+            guard let self, self.currentMode != "idle" else { return }
+            if let reason = AVAudioSession.RouteChangeReason(rawValue: reasonVal),
+               reason == .oldDeviceUnavailable {
                 self.tearDownEngineLocked()
                 self.sendEvent("state", ["state": "idle", "error": "Audio device disconnected"])
+            } else {
+                // Non-fatal: invalidate the cached converter so the next tap callback
+                // recreates it with the updated hardware format.
+                self.converter = nil
+                audioLog.info("Converter invalidated for route change \(reasonVal)")
             }
         }
     }
@@ -194,11 +216,20 @@ public class AppleJaxAudioModule: Module {
         removeSessionObservers()
         let was = currentMode
         currentMode = "idle"
+        // Invalidate any in-flight tap callbacks from this session.
+        sessionGeneration &+= 1
         converter = nil
         if engine.isRunning { engine.stop() }
-        engine.inputNode.removeTap(onBus: 0)
-        if engine.attachedNodes.contains(playerNode) {
+        // Remove only the taps that were actually installed (avoids spurious log warnings).
+        if inputTapInstalled {
+            engine.inputNode.removeTap(onBus: 0)
+            inputTapInstalled = false
+        }
+        if mixerTapInstalled {
             engine.mainMixerNode.removeTap(onBus: 0)
+            mixerTapInstalled = false
+        }
+        if engine.attachedNodes.contains(playerNode) {
             playerNode.stop()
             engine.detach(playerNode)
         }
@@ -207,9 +238,21 @@ public class AppleJaxAudioModule: Module {
         audioLog.info("Engine torn down (was: \(was))")
     }
 
+    /// Stops the engine and deactivates the AVAudioSession.
+    /// Safe to call from any thread, including from within an engineQueue callback —
+    /// re-entrance is detected via DispatchSpecificKey to avoid deadlock.
     private func stopAll() {
-        engineQueue.sync { tearDownEngineLocked() }
-        try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+        let work: () -> Void = {
+            self.tearDownEngineLocked()
+            try? AVAudioSession.sharedInstance().setActive(
+                false, options: [.notifyOthersOnDeactivation]
+            )
+        }
+        if DispatchQueue.getSpecific(key: Self.queueKey) != nil {
+            work() // Already on engineQueue — call directly to avoid deadlock
+        } else {
+            engineQueue.sync(execute: work)
+        }
     }
 
     private func makeOutputFormat() -> AVAudioFormat? {
@@ -225,17 +268,22 @@ public class AppleJaxAudioModule: Module {
 
     private func beginMicLocked() throws {
         tearDownEngineLocked()
+        let generation = sessionGeneration
 
-        // Use nil format so AVAudioEngine delivers the hardware-native format — avoid
-        // querying outputFormat(forBus:) before the engine starts, which can return
-        // sampleRate=0 and produce a nil AVAudioConverter.
+        // Install tap with nil format so AVAudioEngine delivers the hardware-native format.
+        // Querying outputFormat(forBus:) before engine.start() can return sampleRate=0,
+        // causing AVAudioConverter to return nil and silently drop all audio.
         engine.inputNode.installTap(onBus: 0, bufferSize: 2048, format: nil) { [weak self] buf, _ in
             guard let self else { return }
-            self.engineQueue.async { self.handleIncomingLocked(buffer: buf) }
+            self.engineQueue.async {
+                guard self.sessionGeneration == generation else { return }
+                self.handleIncomingLocked(buffer: buf)
+            }
         }
+        inputTapInstalled = true
         engine.prepare()
-        let fmtAfterPrepare = engine.inputNode.outputFormat(forBus: 0)
-        audioLog.info("Mic input format (post-prepare): sr=\(fmtAfterPrepare.sampleRate) ch=\(fmtAfterPrepare.channelCount)")
+        let fmt = engine.inputNode.outputFormat(forBus: 0)
+        audioLog.info("Mic input format (post-prepare): sr=\(fmt.sampleRate) ch=\(fmt.channelCount)")
         try engine.start()
         audioLog.info("Engine started (mic)")
         currentMode = "mic"
@@ -245,10 +293,10 @@ public class AppleJaxAudioModule: Module {
 
     private func beginFileLocked(uriString: String) throws {
         tearDownEngineLocked()
-        let url: URL = uriString.contains("://")
-            ? (URL(string: uriString) ?? URL(fileURLWithPath: uriString))
-            : URL(fileURLWithPath: uriString)
-
+        let url: URL = {
+            if let parsed = URL(string: uriString), parsed.scheme != nil { return parsed }
+            return URL(fileURLWithPath: uriString)
+        }()
         audioLog.info("Opening: \(url.lastPathComponent)")
         let file = try AVAudioFile(forReading: url)
         audioLog.info("File format: sr=\(file.processingFormat.sampleRate) ch=\(file.processingFormat.channelCount) frames=\(file.length)")
@@ -256,10 +304,15 @@ public class AppleJaxAudioModule: Module {
         engine.attach(playerNode)
         engine.connect(playerNode, to: engine.mainMixerNode, format: file.processingFormat)
 
+        let generation = sessionGeneration
         engine.mainMixerNode.installTap(onBus: 0, bufferSize: 2048, format: nil) { [weak self] buf, _ in
             guard let self else { return }
-            self.engineQueue.async { self.handleIncomingLocked(buffer: buf) }
+            self.engineQueue.async {
+                guard self.sessionGeneration == generation else { return }
+                self.handleIncomingLocked(buffer: buf)
+            }
         }
+        mixerTapInstalled = true
 
         engine.prepare()
         audioLog.info("Mixer output format (post-prepare): sr=\(engine.mainMixerNode.outputFormat(forBus: 0).sampleRate)")
@@ -269,6 +322,8 @@ public class AppleJaxAudioModule: Module {
         playerNode.scheduleFile(file, at: nil) { [weak self] in
             guard let self else { return }
             self.engineQueue.async {
+                // Guard: user may have already called stopFile before natural playback end
+                guard self.currentMode == "file" else { return }
                 self.tearDownEngineLocked()
                 self.sendEvent("state", ["state": "idle"])
                 try? AVAudioSession.sharedInstance().setActive(
@@ -285,21 +340,25 @@ public class AppleJaxAudioModule: Module {
     private func handleIncomingLocked(buffer: AVAudioPCMBuffer) {
         guard currentMode != "idle" else { return }
 
-        // Create converter lazily — buffer.format is always valid inside a tap callback,
-        // unlike querying outputFormat(forBus:) before engine.start().
+        // Rebuild converter if the input format changed (e.g. after a route change).
+        if let existing = converter, existing.inputFormat != buffer.format {
+            audioLog.info("Input format changed (\(buffer.format.sampleRate) Hz) — rebuilding converter")
+            converter = nil
+        }
+
         if converter == nil {
             guard let outFmt = makeOutputFormat() else {
                 audioLog.error("makeOutputFormat returned nil")
                 return
             }
             if let conv = AVAudioConverter(from: buffer.format, to: outFmt) {
-                audioLog.info("Converter ready: \(buffer.format.sampleRate)→\(outFmt.sampleRate) Hz, \(buffer.format.channelCount)ch→\(outFmt.channelCount)ch")
+                audioLog.info("Converter ready: \(buffer.format.sampleRate)→\(outFmt.sampleRate) Hz \(buffer.format.channelCount)→\(outFmt.channelCount)ch")
                 converter = conv
             } else {
                 audioLog.error("AVAudioConverter returned nil: \(buffer.format.sampleRate)Hz \(buffer.format.channelCount)ch → \(outFmt.sampleRate)Hz")
                 tearDownEngineLocked()
                 sendEvent("state", ["state": "idle",
-                    "error": "Audio converter failed (\(Int(buffer.format.sampleRate))Hz \(buffer.format.channelCount)ch → \(Int(outFmt.sampleRate))Hz)"])
+                    "error": "Audio converter failed (\(Int(buffer.format.sampleRate))Hz → \(Int(outFmt.sampleRate))Hz)"])
                 return
             }
         }
@@ -327,6 +386,15 @@ public class AppleJaxAudioModule: Module {
 
         guard let chData = outBuf.floatChannelData?[0] else { return }
         let count = Int(outBuf.frameLength)
+
+        // Cap pending buffer to prevent unbounded growth when the TCP socket is slow.
+        let pending = pendingFloats.count - pendingHead
+        if pending + count > kMaxPendingFrames {
+            let drop = (pending + count) - kMaxPendingFrames
+            audioLog.warning("Pending overflow, dropping \(drop) samples")
+            pendingHead = min(pendingHead + drop, pendingFloats.count)
+        }
+
         pendingFloats.append(contentsOf: UnsafeBufferPointer(start: chData, count: count))
 
         let chunkSize = Int(kFramesPerChunk)
