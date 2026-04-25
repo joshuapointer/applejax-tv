@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 SRC="${HOME}/Music/projectm-presets/"
-DST="${REPO_ROOT}/apps/tvos/Resources/presets/"
+DST="${REPO_ROOT}/apps/tvos16/Resources/presets/"
 
 if [[ ! -d "${SRC}" ]]; then
     echo "ERROR: preset pack not found at ${SRC}" >&2

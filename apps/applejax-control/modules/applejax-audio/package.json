@@ -1,0 +1,7 @@
+{
+  "name": "applejax-audio",
+  "version": "0.1.0",
+  "description": "AVAudioEngine PCM extractor for appleJax Control",
+  "main": "index.ts",
+  "private": true
+}

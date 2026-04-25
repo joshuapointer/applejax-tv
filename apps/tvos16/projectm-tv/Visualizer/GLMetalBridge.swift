@@ -112,11 +112,11 @@ final class GLMetalBridge {
         }
 
         if framebuffers.count != bufferCount {
-            renderLogger.error("GLMetalBridge: only created \(framebuffers.count)/\(bufferCount) framebuffers")
+            renderLogger.error("GLMetalBridge: only created \(self.framebuffers.count)/\(self.bufferCount) framebuffers")
         }
 
         currentIndex = 0
-        renderLogger.info("GLMetalBridge: resized to \(width)x\(height), \(framebuffers.count) buffers")
+        renderLogger.info("GLMetalBridge: resized to \(width)x\(height), \(self.framebuffers.count) buffers")
     }
 
     /// Get the next GL framebuffer for rendering. Rotates through the triple buffer.

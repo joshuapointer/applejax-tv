@@ -36,6 +36,7 @@
 		D238A4B0CAC0BD37D681569A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8B1F1E14D95C27095A049 /* RootView.swift */; };
 		DD391FCF0C474BB3810EFE4F /* ProjectMRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */; };
 		DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA20882B178157A3ACD5DAF5 /* Assets.xcassets */; };
+		AABBCCDD11223344EEFF5566 /* presets in Resources */ = {isa = PBXBuildFile; fileRef = 1122AABB3344CCDD5566EEFF /* presets */; };
 		DEDF9B58165C2AFB1647B5FE /* BPMEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AE67FF24E82876E63F5316 /* BPMEstimator.swift */; };
 		E528AF015306423DC764A24F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C73B56F467727875E27D5C0 /* MetalRenderer.swift */; };
 		E841557D488630C18F5EA39A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 633C4F41819226F2A260F069 /* AVFoundation.framework */; };
@@ -85,6 +86,7 @@
 		EDF7604856BF331BAA1E057C /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1122AABB3344CCDD5566EEFF /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/presets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				323FC9E8A1468F05BEF83CCB /* projectm-tv */,
+				1122AABB3344CCDD5566EEFF /* presets */,
 				07BF515D28FA1B3F9EACEA02 /* Frameworks */,
 				567AAFCF4E2EE43CAD44B201 /* Products */,
 			);
@@ -303,6 +306,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */,
+				AABBCCDD11223344EEFF5566 /* presets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

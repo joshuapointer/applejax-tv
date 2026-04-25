@@ -1,4 +1,5 @@
 import Foundation
+import QuartzCore
 
 enum SourceKind: String {
     case idle
