@@ -54,11 +54,13 @@ export default function App() {
         const ok = sock.write(frame as any);
         if (ok === false) pausedRef.current = true;
         sentChunksRef.current += 1;
-      } catch {
+      } catch (e) {
+        console.warn('[appleJax] pcm write error:', e);
         droppedRef.current += 1;
       }
     });
     const stateSub = AppleJaxAudio.addListener('state', ({ state, error }) => {
+      console.log('[appleJax] state event:', state, error ?? '');
       setMode(state);
       if (error) setStatus(`Error: ${error}`);
       else setStatus(state === 'idle' ? 'Idle' : `Streaming (${state})`);
@@ -80,17 +82,20 @@ export default function App() {
     const sock = TcpSocket.createConnection(
       { host, port: portNum, tls: false },
       () => {
+        console.log(`[appleJax] connected to ${host}:${portNum}`);
         setConn('connected');
         setStatus(`Connected to ${host}:${portNum}`);
       }
     );
     sock.on('error', (err: Error) => {
+      console.error('[appleJax] socket error:', err.message);
       setConn('error');
       setStatus(`Socket error: ${err.message}`);
       pausedRef.current = false;
       socketRef.current = null;
     });
     sock.on('close', () => {
+      console.log('[appleJax] socket closed');
       setConn('disconnected');
       setStatus('Disconnected');
       pausedRef.current = false;
@@ -111,8 +116,11 @@ export default function App() {
 
   const startMic = useCallback(async () => {
     try {
+      console.log('[appleJax] startMic called');
       await AppleJaxAudio.startMic();
+      console.log('[appleJax] startMic resolved');
     } catch (e) {
+      console.error('[appleJax] startMic error:', e);
       Alert.alert('Mic error', String(e));
     }
   }, []);
@@ -130,9 +138,12 @@ export default function App() {
       });
       if (res.canceled || !res.assets?.length) return;
       const asset = res.assets[0];
+      console.log('[appleJax] playFile:', asset.name, asset.uri);
       setFilename(asset.name ?? 'file');
       await AppleJaxAudio.playFile(asset.uri);
+      console.log('[appleJax] playFile resolved');
     } catch (e) {
+      console.error('[appleJax] playFile error:', e);
       Alert.alert('File error', String(e));
     }
   }, []);
