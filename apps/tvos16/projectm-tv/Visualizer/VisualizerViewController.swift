@@ -139,7 +139,9 @@ final class VisualizerViewController: UIViewController {
                                           scale: 1.0)
         if pmRenderer == nil {
             logger.error("Failed to create ProjectMRenderer on render thread")
-            DispatchQueue.main.async { self.showFatalError("Rendering engine failed to start") }
+            isShuttingDown = true
+            renderLoop.setPaused(true)
+            DispatchQueue.main.async { [weak self] in self?.showFatalError("Rendering engine failed to start") }
             return
         }
         self.projectMRenderer = pmRenderer
@@ -165,13 +167,15 @@ final class VisualizerViewController: UIViewController {
 
     /// Render one frame. Called on the render thread by the display link.
     private func drawFrame() {
+        // Drain first: bootstrapOnRenderThread (which sets projectMRenderer) lives
+        // in pendingTasks. If drain ran after the guard, bootstrap would never
+        // execute and projectMRenderer would stay nil forever — permanent black screen.
+        renderLoop.drainPendingTasks()
+
         guard isSetUp, !isShuttingDown,
               let bridge, let projectMRenderer, let metalRenderer, let view = mtkView else {
             return
         }
-
-        // --- Pre-frame: process pending cross-thread tasks (preset loads etc) ---
-        renderLoop.drainPendingTasks()
 
         // --- Adapt internal resolution if perf monitor recommends a change ---
         let scaleChanged = perfMonitor.tick()
