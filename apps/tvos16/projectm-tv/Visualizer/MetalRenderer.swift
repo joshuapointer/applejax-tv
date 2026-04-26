@@ -1,9 +1,9 @@
 import Foundation
 import Metal
-import MetalKit
+import QuartzCore
 
 /// Handles the Metal side of the rendering pipeline: blits a texture (from GL via GLMetalBridge)
-/// to an MTKView's drawable using a simple fullscreen triangle pass.
+/// to a CAMetalLayer drawable using a simple fullscreen triangle pass.
 final class MetalRenderer {
     private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
@@ -19,7 +19,6 @@ final class MetalRenderer {
         }
         self.commandQueue = queue
 
-        // Load shader functions from the default library
         guard let library = device.makeDefaultLibrary() else {
             renderLogger.error("MetalRenderer: failed to load default Metal library")
             return nil
@@ -33,7 +32,6 @@ final class MetalRenderer {
             return nil
         }
 
-        // Create render pipeline
         let desc = MTLRenderPipelineDescriptor()
         desc.vertexFunction = vertexFunc
         desc.fragmentFunction = fragmentFunc
@@ -46,7 +44,6 @@ final class MetalRenderer {
             return nil
         }
 
-        // Create sampler (linear filtering, clamp to edge)
         let samplerDesc = MTLSamplerDescriptor()
         samplerDesc.minFilter = .linear
         samplerDesc.magFilter = .linear
@@ -61,18 +58,16 @@ final class MetalRenderer {
         renderLogger.info("MetalRenderer: initialized successfully")
     }
 
-    /// Blit the input texture (GL output) to the MTKView's current drawable.
-    /// Returns false if the frame was skipped (no drawable, encoding failure, etc.)
+    /// Blit the input texture (GL output) to a CAMetalLayer drawable.
+    /// Safe to call from any thread — uses CAMetalLayer.nextDrawable() which is thread-safe.
     @discardableResult
-    func render(texture: MTLTexture, in view: MTKView) -> Bool {
-        guard let drawable = view.currentDrawable,
-              let passDescriptor = view.currentRenderPassDescriptor else {
-            return false
-        }
+    func render(texture: MTLTexture, drawable: any CAMetalDrawable) -> Bool {
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else { return false }
 
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
-            return false
-        }
+        let passDescriptor = MTLRenderPassDescriptor()
+        passDescriptor.colorAttachments[0].texture = drawable.texture
+        passDescriptor.colorAttachments[0].loadAction = .dontCare
+        passDescriptor.colorAttachments[0].storeAction = .store
 
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor) else {
             return false

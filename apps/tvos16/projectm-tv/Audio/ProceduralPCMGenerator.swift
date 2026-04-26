@@ -17,8 +17,17 @@ final class ProceduralPCMGenerator {
     private var b0: Float = 0, b1: Float = 0, b2: Float = 0
     private var b3: Float = 0, b4: Float = 0, b5: Float = 0, b6: Float = 0
 
+    // Pre-allocated buffer — avoids 8 KB heap allocation on every ~21 ms timer tick
+    private let chunkBuffer: UnsafeMutablePointer<Float>
+
     init(ringBuffer: PCMRingBuffer) {
         self.ringBuffer = ringBuffer
+        self.chunkBuffer = .allocate(capacity: chunkSize * 2)
+    }
+
+    deinit {
+        stop()
+        chunkBuffer.deallocate()
     }
 
     func setBPM(_ bpm: Double) {
@@ -46,8 +55,7 @@ final class ProceduralPCMGenerator {
     }
 
     private func generateChunk() {
-        let buf = UnsafeMutablePointer<Float>.allocate(capacity: chunkSize * 2)
-        defer { buf.deallocate() }
+        let buf = chunkBuffer
 
         let beatInterval = 60.0 / bpm
         let carrierAmp: Float = 0.0625  // -24 dBFS
@@ -98,9 +106,5 @@ final class ProceduralPCMGenerator {
         }
 
         ringBuffer.write(buf, frameCount: chunkSize)
-    }
-
-    deinit {
-        stop()
     }
 }

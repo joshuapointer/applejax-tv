@@ -1,34 +1,24 @@
 import UIKit
 import Metal
-import MetalKit
+import QuartzCore
 import OpenGLES
 
-final class VisualizerViewController: UIViewController, MTKViewDelegate {
-    private var metalDevice: MTLDevice?
-    private var mtkView: MTKView?
-    private var bridge: GLMetalBridge?
-    private var metalRenderer: MetalRenderer?
-    private var projectMRenderer: ProjectMRenderer?
-    private var isSetUp = false
-
+final class VisualizerViewController: UIViewController {
     // Injected from outside
     var appState: AppState?
     var audioController: AudioController?
     var presetLibrary: PresetLibrary?
 
-    // Input handling
-    private let inputHandler = RemoteInputHandler()
+    private var renderEngine: RenderEngine?
+    private var metalLayer: CAMetalLayer?
 
-    // PCM drain buffer (reused each frame to avoid allocation)
-    private var pcmDrainBuffer: UnsafeMutablePointer<Float>?
-    private let maxSamples: Int = 576  // projectM default max_samples
+    private let inputHandler = RemoteInputHandler()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        setupMetal()
+        setupRendering()
         setupInput()
-        loadFirstPreset()
 
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground),
                                                name: UIApplication.didEnterBackgroundNotification, object: nil)
@@ -38,127 +28,77 @@ final class VisualizerViewController: UIViewController, MTKViewDelegate {
 
     // MARK: - Setup
 
-    private func setupMetal() {
-        // 1. Metal device
+    private func setupRendering() {
         guard let device = MTLCreateSystemDefaultDevice() else {
-            logger.error("Metal is not available on this device")
+            logger.error("Metal not available on this device")
             showFatalError("Metal not available")
             return
         }
-        self.metalDevice = device
 
-        // 2. GL↔Metal bridge (creates EAGLContext + texture caches)
-        guard let glMetalBridge = GLMetalBridge(device: device) else {
-            logger.error("Failed to create GLMetalBridge")
-            showFatalError("GL/Metal bridge failed")
-            return
-        }
-        self.bridge = glMetalBridge
+        let scale = UIScreen.main.nativeScale
+        let pixelWidth = Int(view.bounds.width * scale)
+        let pixelHeight = Int(view.bounds.height * scale)
 
-        // 3. Metal renderer (pipeline state + command queue)
-        guard let mtlRenderer = MetalRenderer(device: device) else {
-            logger.error("Failed to create MetalRenderer")
-            showFatalError("Metal renderer failed")
-            return
-        }
-        self.metalRenderer = mtlRenderer
+        // Use CAMetalLayer directly — nextDrawable() is explicitly safe from any thread,
+        // allowing the full render pipeline to run on the background render thread.
+        let layer = CAMetalLayer()
+        layer.device = device
+        layer.pixelFormat = .bgra8Unorm
+        layer.framebufferOnly = true
+        layer.isOpaque = true
+        layer.contentsScale = scale
+        layer.frame = view.bounds
+        layer.drawableSize = CGSize(width: pixelWidth, height: pixelHeight)
+        // 3 in-flight drawables match the GL→Metal triple buffer in GLMetalBridge,
+        // so the GPU never blocks waiting for a free drawable at 60 fps.
+        layer.maximumDrawableCount = 3
+        layer.presentsWithTransaction = false
+        view.layer.addSublayer(layer)
+        metalLayer = layer
 
-        // 4. projectM renderer (requires GL context current)
-        EAGLContext.setCurrent(glMetalBridge.glContext)
-
-        let scale = view.window?.screen.nativeScale ?? UIScreen.main.nativeScale
-        guard let pmRenderer = ProjectMRenderer(viewportSize: view.bounds.size, scale: scale) else {
-            logger.error("Failed to create ProjectMRenderer")
+        guard let engine = RenderEngine(device: device, metalLayer: layer,
+                                        pixelWidth: pixelWidth, pixelHeight: pixelHeight) else {
+            logger.error("Failed to create RenderEngine")
             showFatalError("Rendering engine failed to start")
             return
         }
-        self.projectMRenderer = pmRenderer
+        engine.audioController = audioController
+        renderEngine = engine
 
-        // 5. MTKView (presentation surface)
-        let metalView = MTKView(frame: view.bounds, device: device)
-        metalView.delegate = self
-        metalView.colorPixelFormat = .bgra8Unorm
-        metalView.framebufferOnly = true
-        metalView.preferredFramesPerSecond = 60
-        metalView.autoResizeDrawable = true
-        metalView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        metalView.contentScaleFactor = scale
-        view.addSubview(metalView)
-        self.mtkView = metalView
-
-        // 6. Initial resize of the bridge to match drawable
-        let drawableSize = metalView.drawableSize
-        glMetalBridge.resize(width: Int(drawableSize.width), height: Int(drawableSize.height))
-        pmRenderer.setViewport(width: Int(drawableSize.width), height: Int(drawableSize.height))
-
-        // 7. Allocate PCM drain buffer
-        pcmDrainBuffer = .allocate(capacity: maxSamples * 2)
-
-        isSetUp = true
-        renderLogger.info("Metal setup complete, MTKView rendering at \(Int(drawableSize.width))x\(Int(drawableSize.height))")
-    }
-
-    // MARK: - MTKViewDelegate
-
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-        guard isSetUp else { return }
-        let w = Int(size.width)
-        let h = Int(size.height)
-
-        EAGLContext.setCurrent(bridge?.glContext)
-        bridge?.resize(width: w, height: h)
-        projectMRenderer?.setViewport(width: w, height: h)
-        renderLogger.info("Drawable resized to \(w)x\(h)")
-    }
-
-    func draw(in view: MTKView) {
-        guard isSetUp,
-              let bridge,
-              let projectMRenderer,
-              let metalRenderer else { return }
-
-        // 1. Make GL context current
-        EAGLContext.setCurrent(bridge.glContext)
-
-        // 2. Get next framebuffer from triple-buffer pool
-        guard let (fbo, pixelBuffer) = bridge.nextFramebuffer() else { return }
-
-        // 3. Drain PCM from ring buffer into projectM
-        if let ringBuffer = audioController?.ringBuffer,
-           let drainBuf = pcmDrainBuffer {
-            let framesRead = ringBuffer.read(into: drainBuf, maxFrames: maxSamples)
-            if framesRead > 0 {
-                projectMRenderer.addPCM(drainBuf, frameCount: UInt32(framesRead), channels: 2)
-            }
+        // Queue the first preset before starting — render thread picks it up on its first frame,
+        // avoiding any race between thread startup and the first preset load.
+        if let lib = presetLibrary, let url = lib.next() {
+            engine.requestPreset(url, smooth: false)
+            appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
         }
 
-        // 4. GL render (projectM writes to the CVPixelBuffer-backed FBO)
-        projectMRenderer.renderFrame(fbo: fbo)
-
-        // 5. Flush GL — submit commands, don't wait (Metal will read asynchronously)
-        bridge.flush()
-
-        // 6. Get the GL output as a Metal texture (zero-copy)
-        guard let texture = bridge.metalTexture(from: pixelBuffer) else { return }
-
-        // 7. Metal blit to drawable
-        metalRenderer.render(texture: texture, in: view)
+        engine.start()
+        renderLogger.info("RenderEngine started at \(pixelWidth)x\(pixelHeight)")
     }
 
-    // MARK: - Presets
+    // MARK: - Layout
 
-    private func loadFirstPreset() {
-        guard let lib = presetLibrary, let url = lib.next() else { return }
-        projectMRenderer?.loadPreset(at: url, smooth: false)
-        appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
-    }
+    private var lastPixelSize: CGSize = .zero
 
-    private func loadSpecificPreset(_ url: URL) {
-        presetLibrary?.jumpTo(url)
-        projectMRenderer?.loadPreset(at: url, smooth: true)
-        appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
-        appState?.isPresetBrowserVisible = false
-        inputHandler.setPresetBrowserVisible(false)
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let metalLayer else { return }
+        let scale = UIScreen.main.nativeScale
+        let pw = Int(view.bounds.width * scale)
+        let ph = Int(view.bounds.height * scale)
+        let newSize = CGSize(width: pw, height: ph)
+        guard newSize != lastPixelSize else { return }
+        lastPixelSize = newSize
+
+        // Only update the CALayer frame (position/geometry) on the main thread.
+        // drawableSize is updated on the render thread via requestResize to avoid
+        // mutating it while nextDrawable() is in flight on the render thread.
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        metalLayer.frame = view.bounds
+        CATransaction.commit()
+
+        renderEngine?.requestResize(pixelWidth: pw, pixelHeight: ph)
     }
 
     // MARK: - Input
@@ -172,24 +112,32 @@ final class VisualizerViewController: UIViewController, MTKViewDelegate {
         }
     }
 
+    private func loadSpecificPreset(_ url: URL) {
+        presetLibrary?.jumpTo(url)
+        renderEngine?.requestPreset(url, smooth: true)
+        appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
+        appState?.isPresetBrowserVisible = false
+        inputHandler.setPresetBrowserVisible(false)
+    }
+
     private func handleCommand(_ command: InputCommand) {
         appState?.recordInteraction()
 
         switch command {
         case .nextPreset:
             if let url = presetLibrary?.next() {
-                projectMRenderer?.loadPreset(at: url, smooth: true)
+                renderEngine?.requestPreset(url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .previousPreset:
             if let url = presetLibrary?.previous() {
-                projectMRenderer?.loadPreset(at: url, smooth: true)
+                renderEngine?.requestPreset(url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .toggleLock:
             if let state = appState {
                 state.isLocked.toggle()
-                projectMRenderer?.setLocked(state.isLocked)
+                renderEngine?.requestSetLocked(state.isLocked)
             }
         case .showOverlay:
             appState?.isOverlayVisible = true
@@ -203,7 +151,7 @@ final class VisualizerViewController: UIViewController, MTKViewDelegate {
         case .shufflePresets:
             presetLibrary?.shuffle()
             if let url = presetLibrary?.next() {
-                projectMRenderer?.loadPreset(at: url, smooth: true)
+                renderEngine?.requestPreset(url, smooth: true)
                 appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
             }
         case .showPresetBrowser:
@@ -248,28 +196,16 @@ final class VisualizerViewController: UIViewController, MTKViewDelegate {
     // MARK: - Lifecycle
 
     @objc private func didEnterBackground() {
-        mtkView?.isPaused = true
-        if let ctx = bridge?.glContext {
-            EAGLContext.setCurrent(ctx)
-            glFinish()
-        }
-        bridge?.flushCaches()
+        renderEngine?.pauseRendering()
     }
 
     @objc private func willEnterForeground() {
-        if let ctx = bridge?.glContext {
-            EAGLContext.setCurrent(ctx)
-        }
-        mtkView?.isPaused = false
+        renderEngine?.resumeRendering()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        mtkView?.isPaused = true
-        mtkView?.delegate = nil
-        pcmDrainBuffer?.deallocate()
-        pcmDrainBuffer = nil
-        isSetUp = false
+        renderEngine?.stop()
     }
 
     private func showFatalError(_ message: String) {

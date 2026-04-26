@@ -60,3 +60,5 @@ src/libprojectM/build/
 cmake-build-*
 .idea
 build-tvos/
+apps/tvos16/build/
+apps/tvos16/build-sim/

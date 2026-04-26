@@ -26,6 +26,12 @@ final class AppleJaxReceiver: AudioSource {
     private var connection: NWConnection?
     private var inbox = Data()  // accumulated unparsed bytes
 
+    // 1Hz diagnostic accumulators — all touched only on `queue`, no locking needed.
+    private var bytesIn: Int = 0
+    private var framesParsed: Int = 0
+    private var pcmFramesEmitted: Int = 0
+    private var diagWindowStart: TimeInterval = 0
+
     // Cross-thread state (UI may read while `queue` writes). Protected by lock.
     private var stateLock = os_unfair_lock()
     private var _listenPort: UInt16 = 0
@@ -180,8 +186,10 @@ final class AppleJaxReceiver: AudioSource {
         conn.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, isComplete, error in
             guard let self else { return }
             if let data, !data.isEmpty {
+                self.bytesIn += data.count
                 self.inbox.append(data)
                 self.parse()
+                self.maybeEmitDiagnostic()
             }
             if let error {
                 audioLogger.error("AppleJaxReceiver receive error: \(error.localizedDescription)")
@@ -237,8 +245,25 @@ final class AppleJaxReceiver: AudioSource {
             let payload = inbox.subdata(in: (inbox.startIndex + headerSize)..<(inbox.startIndex + frameTotal))
             inbox.removeFirst(frameTotal)
 
+            framesParsed += 1
             ingest(monoFloat32LE: payload)
         }
+    }
+
+    private func maybeEmitDiagnostic() {
+        let now = CFAbsoluteTimeGetCurrent()
+        if diagWindowStart == 0 {
+            diagWindowStart = now
+            return
+        }
+        let elapsed = now - diagWindowStart
+        guard elapsed >= 1.0 else { return }
+        // .notice so the line is visible in Console.app live streaming on tvOS.
+        audioLogger.notice("AppleJax bytes=\(self.bytesIn) frames=\(self.framesParsed) pcmOut=\(self.pcmFramesEmitted) in \(String(format: "%.2f", elapsed))s client=\(self.clientDescription, privacy: .public)")
+        bytesIn = 0
+        framesParsed = 0
+        pcmFramesEmitted = 0
+        diagWindowStart = now
     }
 
     // MARK: - PCM ingest
@@ -270,7 +295,8 @@ final class AppleJaxReceiver: AudioSource {
 
         stereo.withUnsafeBufferPointer { ptr in
             if let base = ptr.baseAddress {
-                ringBuffer.write(base, frameCount: outFrames)
+                let written = ringBuffer.write(base, frameCount: outFrames)
+                pcmFramesEmitted += written
             }
         }
     }

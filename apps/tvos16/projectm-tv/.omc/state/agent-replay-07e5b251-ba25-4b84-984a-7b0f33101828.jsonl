@@ -1,0 +1,5 @@
+{"t":0,"agent":"ad10b79","agent_type":"architect","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"ad69939","agent_type":"code-reviewer","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"ad10b79","agent_type":"architect","event":"agent_stop","success":true,"duration_ms":141462}
+{"t":0,"agent":"ad69939","agent_type":"code-reviewer","event":"agent_stop","success":true,"duration_ms":133361}
+{"t":0,"agent":"a83989d","agent_type":"unknown","event":"agent_stop","success":true}

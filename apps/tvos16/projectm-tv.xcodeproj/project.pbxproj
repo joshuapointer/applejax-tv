@@ -20,7 +20,6 @@
 		5CE0C4A2FD11D56AB7789975 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D004B1C426FB0B8F261ABD /* Logger.swift */; };
 		5EC9DC1A61C15E7154410892 /* GLMetalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */; };
 		5F1BBE89F97A4C8C64F8FD21 /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130FF7216F5CE458FB5EAF8A /* AudioController.swift */; };
-		BB22CC33DD44EE55FF667788 /* AppleJaxReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8877665544332211FFEEDDCC /* AppleJaxReceiver.swift */; };
 		799FDB370D7D9730B230E72F /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */; };
 		7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */; };
 		839569D3908FCDDF4042BA31 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D26DA5AC7B690609CA39BBD /* MetalKit.framework */; };
@@ -31,13 +30,15 @@
 		9F1B4AD9881C8FB1FC6288B2 /* MusicKitSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B5A3AD507A10621DA8383D /* MusicKitSource.swift */; };
 		A67916C8B8B5642B506D6433 /* ProjectMTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51CDE95FC1D2E7B91D46285 /* ProjectMTVApp.swift */; };
 		A6C2086C5180DB24A6E623B8 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79E67B22BE8359618AF6ADA9 /* MusicKit.framework */; };
+		AABBCCDD11223344EEFF5566 /* Resources/presets in Resources */ = {isa = PBXBuildFile; fileRef = 1122AABB3344CCDD5566EEFF /* Resources/presets */; };
+		AB83E219C4F07B5D16902847 /* RenderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */; };
 		B21DE7780DA1BE8283D540F8 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CA192DA05D310D4EF3CFC9A /* CoreVideo.framework */; };
 		B248B658893E5D6B696841A2 /* ProjectMBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = B42F52CFE8968EF77045E74D /* ProjectMBridge.m */; };
+		BB22CC33DD44EE55FF667788 /* AppleJaxReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8877665544332211FFEEDDCC /* AppleJaxReceiver.swift */; };
 		BDF8E680AACF494DFF4EDCE2 /* Blit.metal in Sources */ = {isa = PBXBuildFile; fileRef = 951D6C4C6460EF43813637A4 /* Blit.metal */; };
 		D238A4B0CAC0BD37D681569A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8B1F1E14D95C27095A049 /* RootView.swift */; };
 		DD391FCF0C474BB3810EFE4F /* ProjectMRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */; };
 		DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA20882B178157A3ACD5DAF5 /* Assets.xcassets */; };
-		AABBCCDD11223344EEFF5566 /* presets in Resources */ = {isa = PBXBuildFile; fileRef = 1122AABB3344CCDD5566EEFF /* presets */; };
 		DEDF9B58165C2AFB1647B5FE /* BPMEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AE67FF24E82876E63F5316 /* BPMEstimator.swift */; };
 		E528AF015306423DC764A24F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C73B56F467727875E27D5C0 /* MetalRenderer.swift */; };
 		E841557D488630C18F5EA39A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 633C4F41819226F2A260F069 /* AVFoundation.framework */; };
@@ -51,8 +52,8 @@
 		01AE67FF24E82876E63F5316 /* BPMEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPMEstimator.swift; sourceTree = "<group>"; };
 		0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngineSource.swift; sourceTree = "<group>"; };
 		0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInputHandler.swift; sourceTree = "<group>"; };
+		1122AABB3344CCDD5566EEFF /* Resources/presets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/presets; sourceTree = "<group>"; };
 		130FF7216F5CE458FB5EAF8A /* AudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioController.swift; sourceTree = "<group>"; };
-		8877665544332211FFEEDDCC /* AppleJaxReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleJaxReceiver.swift; sourceTree = "<group>"; };
 		1D26DA5AC7B690609CA39BBD /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcePickerView.swift; sourceTree = "<group>"; };
 		23DB093954D9DCC7CBE225BB /* PCMRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCMRingBuffer.swift; sourceTree = "<group>"; };
@@ -71,6 +72,7 @@
 		79E67B22BE8359618AF6ADA9 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
 		7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputCommand.swift; sourceTree = "<group>"; };
+		8877665544332211FFEEDDCC /* AppleJaxReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleJaxReceiver.swift; sourceTree = "<group>"; };
 		88CD6169B551623C0F871889 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizerContainerView.swift; sourceTree = "<group>"; };
 		907E8A0940A03655BFCDAB35 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -84,11 +86,11 @@
 		B527478651FEC90AB4E4F181 /* PresetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetLibrary.swift; sourceTree = "<group>"; };
 		BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLMetalBridge.swift; sourceTree = "<group>"; };
 		CC29242D152262F8F9F36BCF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderEngine.swift; sourceTree = "<group>"; };
 		D51CDE95FC1D2E7B91D46285 /* ProjectMTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectMTVApp.swift; sourceTree = "<group>"; };
 		EDF7604856BF331BAA1E057C /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1122AABB3344CCDD5566EEFF /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/presets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				323FC9E8A1468F05BEF83CCB /* projectm-tv */,
-				1122AABB3344CCDD5566EEFF /* presets */,
+				1122AABB3344CCDD5566EEFF /* Resources/presets */,
 				07BF515D28FA1B3F9EACEA02 /* Frameworks */,
 				567AAFCF4E2EE43CAD44B201 /* Products */,
 			);
@@ -222,6 +224,7 @@
 				647BBE68FF8E329F00D43B76 /* ProjectMBridge.h */,
 				B42F52CFE8968EF77045E74D /* ProjectMBridge.m */,
 				5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */,
+				CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */,
 				6229646C9180D197E49FD5CC /* VisualizerViewController.swift */,
 				3283B2F4F438ADBDC63B283A /* Shaders */,
 			);
@@ -276,7 +279,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					F6BCE94E07AF72AD8448B93F = {
 						DevelopmentTeam = X6N4DF258V;
@@ -309,7 +312,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */,
-				AABBCCDD11223344EEFF5566 /* presets in Resources */,
+				AABBCCDD11223344EEFF5566 /* Resources/presets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +348,7 @@
 				D238A4B0CAC0BD37D681569A /* RootView.swift in Sources */,
 				52CE109D2066836DB3B54273 /* SourcePickerView.swift in Sources */,
 				7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */,
+				AB83E219C4F07B5D16902847 /* RenderEngine.swift in Sources */,
 				33B81DD01BB5F88F66A7586C /* VisualizerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -361,8 +365,8 @@
 				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = X6N4DF258V;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"Frameworks\"",
@@ -387,6 +391,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -418,6 +423,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X6N4DF258V;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -439,6 +445,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -450,6 +457,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -481,6 +489,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = X6N4DF258V;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -495,6 +504,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -511,8 +521,8 @@
 				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = X6N4DF258V;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"Frameworks\"",
@@ -523,6 +533,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-lstdc++";
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshpointer.applejax;
 				SDKROOT = appletvos;
