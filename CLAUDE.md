@@ -110,7 +110,7 @@ At configure time, CMake runs `GenerateShaderResources` → `ShaderResources.hpp
 
 ## In-flight local modifications (tvOS work)
 
-This checkout has uncommitted work in progress for a personal-use tvOS visualizer under `apps/tvos/` (see that dir's `README.md`). The three modified upstream files are:
+This checkout has uncommitted work in progress for a personal-use tvOS visualizer under `apps/appleJax/` (with a `flapJax` iPhone companion at `apps/flapJax/`). See `apps/appleJax/README.md` for the build flow. The three modified upstream files are:
 
 - `src/libprojectM/Renderer/Platform/GladLoader.cpp` — GLES floor relaxed to 3.0/GLSL 3.00 on tvOS/iOS (EAGL tops out there).
 - `src/libprojectM/Renderer/Platform/PlatformLibraryNames.hpp` — Apple branch routes to `OpenGLES.framework` on tvOS/iOS (no `OpenGL.framework`).
@@ -132,4 +132,4 @@ If you're working on desktop/Linux/Windows and these edits confuse you, they're 
 
 ## Ongoing personal work
 
-`apps/tvos/` is a personal-use Apple TV visualizer built on this library (not part of upstream). Its own README at `apps/tvos/README.md` is authoritative for that build. `.omc/` contains autopilot planning artifacts for the same effort. Neither is part of the upstream library release and both are safe to ignore when working on core libprojectM changes.
+`apps/appleJax/` (tvOS visualizer, formerly `tvos16/projectm-tv`) and `apps/flapJax/` (iPhone companion, formerly `applejax-control`) are personal-use apps built on this library, not part of upstream. Their own READMEs are authoritative for those builds. `.omc/` contains autopilot planning artifacts for the same effort. Neither is part of the upstream library release and both are safe to ignore when working on core libprojectM changes.

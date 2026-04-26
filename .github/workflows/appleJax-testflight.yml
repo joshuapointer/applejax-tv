@@ -1,0 +1,169 @@
+name: appleJax → TestFlight
+
+# Builds the appleJax tvOS app and ships it to TestFlight on every push to main
+# that touches the app or libprojectM source. Manual runs via workflow_dispatch.
+#
+# Required GitHub repository secrets (set in Settings → Secrets and variables → Actions):
+#
+#   APP_STORE_CONNECT_API_KEY_ID       — the 10-char Key ID from
+#                                         App Store Connect → Users and Access → Integrations → App Store Connect API
+#   APP_STORE_CONNECT_ISSUER_ID        — the Issuer ID (UUID) shown on the same page
+#   APP_STORE_CONNECT_API_KEY_BASE64   — base64 of the downloaded AuthKey_*.p8 file
+#                                         (`base64 -i AuthKey_XXXX.p8 | pbcopy`)
+#
+# The API key needs the "App Manager" role (or higher) so xcodebuild can
+# manage signing assets and altool can upload builds.
+#
+# Prerequisites in App Store Connect:
+#   - The app record for bundle id com.joshpointer.applejax must already exist
+#     (create it once via App Store Connect → My Apps → + → New App, tvOS, SKU = applejax).
+#     First-time provisioning profile creation happens automatically once the record is there.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/appleJax/**'
+      - 'src/**'
+      - 'cmake/**'
+      - 'vendor/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/appleJax-testflight.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: appleJax-testflight
+  cancel-in-progress: false
+
+env:
+  TEAM_ID: X6N4DF258V
+  BUNDLE_ID: com.joshpointer.applejax
+  PRESETS_REPO: https://github.com/projectM-visualizer/presets-cream-of-the-crop
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install build tools
+        run: brew install cmake xcodegen
+
+      # The xcframework's static archives (.a) are gitignored; only headers are
+      # tracked. Cache the full xcframework keyed on libprojectM source so we
+      # only pay the ~5-minute cross-compile when src/ actually changes.
+      - name: Cache libprojectM xcframework
+        id: xcfw-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/appleJax/Frameworks/libprojectM.xcframework
+          key: libprojectM-xcfw-${{ runner.os }}-${{ hashFiles('src/**', 'cmake/**', 'vendor/**', 'CMakeLists.txt', 'apps/appleJax/scripts/build-libprojectm-xcframework.sh', 'apps/appleJax/scripts/toolchains/tvos.cmake') }}
+
+      - name: Build libprojectM xcframework
+        if: steps.xcfw-cache.outputs.cache-hit != 'true'
+        run: ./apps/appleJax/scripts/build-libprojectm-xcframework.sh
+
+      - name: Sync preset pack
+        run: |
+          git clone --depth 1 "$PRESETS_REPO" "$RUNNER_TEMP/presets"
+          mkdir -p apps/appleJax/Resources/presets
+          rsync -a \
+            --exclude='.git' --exclude='.gitignore' --exclude='.DS_Store' \
+            "$RUNNER_TEMP/presets/" apps/appleJax/Resources/presets/
+
+      - name: Regenerate Xcode project from project.yml
+        working-directory: apps/appleJax
+        run: xcodegen generate
+
+      # CFBundleVersion must monotonically increase across all TestFlight uploads
+      # for the same CFBundleShortVersionString. Use the run timestamp; that beats
+      # `github.run_number` which resets per-workflow if you ever re-create the
+      # workflow file, and beats commit-count which can regress on force-push.
+      - name: Bump CFBundleVersion
+        id: build_number
+        run: |
+          BUILD_NUMBER="$(date -u +%s)"
+          /usr/libexec/PlistBuddy \
+            -c "Set :CFBundleVersion $BUILD_NUMBER" \
+            apps/appleJax/appleJax/Info.plist
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "## appleJax build #$BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install App Store Connect API key
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$API_KEY_BASE64" | base64 -D \
+            > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+
+      - name: Archive
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcodebuild archive \
+            -project apps/appleJax/appleJax.xcodeproj \
+            -scheme appleJax \
+            -configuration Release \
+            -destination 'generic/platform=tvOS' \
+            -archivePath "$RUNNER_TEMP/appleJax.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation
+
+      # ExportOptions with destination=upload makes -exportArchive both export
+      # the .ipa and ship it to App Store Connect / TestFlight in one shot.
+      - name: Export and upload to TestFlight
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>stripSwiftSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/appleJax.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+          echo "Build ${{ steps.build_number.outputs.build_number }} uploaded to TestFlight." >> "$GITHUB_STEP_SUMMARY"
+          echo "Apple typically takes 5-30 minutes to process before the build appears in TestFlight." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload archive on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appleJax-xcarchive-${{ steps.build_number.outputs.build_number }}
+          path: ${{ runner.temp }}/appleJax.xcarchive
+          retention-days: 7
+          if-no-files-found: ignore

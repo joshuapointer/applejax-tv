@@ -1,0 +1,7 @@
+{
+  "name": "flapjax-audio",
+  "version": "0.1.0",
+  "description": "AVAudioEngine PCM extractor for flapJax",
+  "main": "index.ts",
+  "private": true
+}

@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "flapJax",
+    "slug": "flapjax",
+    "scheme": "applejax",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.joshpointer.flapjax",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "flapJax captures microphone audio to drive the appleJax visualizer on your Apple TV.",
+        "NSLocalNetworkUsageDescription": "flapJax streams audio data to the appleJax tvOS app on your local network.",
+        "NSCameraUsageDescription": "flapJax uses the camera to scan the QR code shown on your Apple TV for one-tap pairing.",
+        "NSAppleMusicUsageDescription": "flapJax reads your local music library so you can stream owned tracks to the visualizer.",
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.joshpointer.flapjax",
+      "permissions": [
+        "RECORD_AUDIO",
+        "INTERNET",
+        "READ_MEDIA_AUDIO"
+      ],
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4df698aa-08cd-43a3-ad0d-27984aab5c99"
+      }
+    }
+  }
+}

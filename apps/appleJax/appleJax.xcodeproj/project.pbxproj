@@ -1,0 +1,583 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0475F82EC600819C21D943F6 /* PresetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B527478651FEC90AB4E4F181 /* PresetLibrary.swift */; };
+		2094CFF222EEBA5A38D2B23D /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */; };
+		2306A73E68AD76F47FB0BFB6 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EDF7604856BF331BAA1E057C /* CoreMedia.framework */; };
+		2C250299439EAFE7460D91AC /* InputCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */; };
+		33B81DD01BB5F88F66A7586C /* VisualizerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6229646C9180D197E49FD5CC /* VisualizerViewController.swift */; };
+		36547C8BD71D9C6908B56779 /* PCMRingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DB093954D9DCC7CBE225BB /* PCMRingBuffer.swift */; };
+		38B81C83985EC0E6CFCE0F12 /* MusicBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4D97ECC1B577142DE0697C2 /* MusicBrowserView.swift */; };
+		44961D44EF2B8092D53DBFDA /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 394525C51E47689B9DFEAC4A /* GameController.framework */; };
+		4813C20AED89721450B98D58 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEDCF9D3900E61642FF91C0 /* AcknowledgementsView.swift */; };
+		52CE109D2066836DB3B54273 /* SourcePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */; };
+		5CE0C4A2FD11D56AB7789975 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D004B1C426FB0B8F261ABD /* Logger.swift */; };
+		5EC9DC1A61C15E7154410892 /* GLMetalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */; };
+		5F1BBE89F97A4C8C64F8FD21 /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130FF7216F5CE458FB5EAF8A /* AudioController.swift */; };
+		799FDB370D7D9730B230E72F /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */; };
+		7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */; };
+		839569D3908FCDDF4042BA31 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D26DA5AC7B690609CA39BBD /* MetalKit.framework */; };
+		87F5DE962B17BEAC18261345 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A56952D50272E45B00CDE78 /* UIKit.framework */; };
+		90EFE46B9AE298FB48E87E1B /* ProceduralPCMGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E9C43C30CA8F6B217842D7 /* ProceduralPCMGenerator.swift */; };
+		9C606D41DFDDF505508B85E9 /* PresetBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A37DAD3051AB1D908472DFC7 /* PresetBrowserView.swift */; };
+		9DC07BA76D907717682E24BC /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88CD6169B551623C0F871889 /* Metal.framework */; };
+		9F1B4AD9881C8FB1FC6288B2 /* MusicKitSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B5A3AD507A10621DA8383D /* MusicKitSource.swift */; };
+		A67916C8B8B5642B506D6433 /* AppleJaxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51CDE95FC1D2E7B91D46285 /* AppleJaxApp.swift */; };
+		A6C2086C5180DB24A6E623B8 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79E67B22BE8359618AF6ADA9 /* MusicKit.framework */; };
+		AABBCCDD11223344EEFF5566 /* Resources/presets in Resources */ = {isa = PBXBuildFile; fileRef = 1122AABB3344CCDD5566EEFF /* Resources/presets */; };
+		AB83E219C4F07B5D16902847 /* RenderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */; };
+		B21DE7780DA1BE8283D540F8 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CA192DA05D310D4EF3CFC9A /* CoreVideo.framework */; };
+		B248B658893E5D6B696841A2 /* ProjectMBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = B42F52CFE8968EF77045E74D /* ProjectMBridge.m */; };
+		BB22CC33DD44EE55FF667788 /* FlapJaxReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8877665544332211FFEEDDCC /* FlapJaxReceiver.swift */; };
+		BDF8E680AACF494DFF4EDCE2 /* Blit.metal in Sources */ = {isa = PBXBuildFile; fileRef = 951D6C4C6460EF43813637A4 /* Blit.metal */; };
+		D238A4B0CAC0BD37D681569A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8B1F1E14D95C27095A049 /* RootView.swift */; };
+		E1C0FA70D71B8A8A1F4B7C01 /* WaitingForClientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C0FA70D71B8A8A1F4B7C02 /* WaitingForClientView.swift */; };
+		E1C0FA70D71B8A8A1F4B7C03 /* QRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C0FA70D71B8A8A1F4B7C04 /* QRCodeView.swift */; };
+		E2D1F9A8C6B0490F7E3A0010 /* DebugOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D1F9A8C6B0490F7E3A0011 /* DebugOverlayView.swift */; };
+		DD391FCF0C474BB3810EFE4F /* ProjectMRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */; };
+		DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA20882B178157A3ACD5DAF5 /* Assets.xcassets */; };
+		DEDF9B58165C2AFB1647B5FE /* BPMEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AE67FF24E82876E63F5316 /* BPMEstimator.swift */; };
+		E528AF015306423DC764A24F /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C73B56F467727875E27D5C0 /* MetalRenderer.swift */; };
+		E841557D488630C18F5EA39A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 633C4F41819226F2A260F069 /* AVFoundation.framework */; };
+		EF6D696C7221BDF07A0D131B /* RemoteInputHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */; };
+		F8B1B23FBD566C9046F8700C /* AudioEngineSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */; };
+		FD244167E0A5794ADD4D223A /* libprojectM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */; };
+		FE2EF29C95E18C6A3DA57353 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907E8A0940A03655BFCDAB35 /* AppState.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		01AE67FF24E82876E63F5316 /* BPMEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BPMEstimator.swift; sourceTree = "<group>"; };
+		0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngineSource.swift; sourceTree = "<group>"; };
+		0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInputHandler.swift; sourceTree = "<group>"; };
+		1122AABB3344CCDD5566EEFF /* Resources/presets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/presets; sourceTree = "<group>"; };
+		130FF7216F5CE458FB5EAF8A /* AudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioController.swift; sourceTree = "<group>"; };
+		1D26DA5AC7B690609CA39BBD /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcePickerView.swift; sourceTree = "<group>"; };
+		23DB093954D9DCC7CBE225BB /* PCMRingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCMRingBuffer.swift; sourceTree = "<group>"; };
+		394525C51E47689B9DFEAC4A /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		3A56952D50272E45B00CDE78 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		42BA78CFDA3451C9B4CD7C97 /* appleJax.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "appleJax.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		47E9C43C30CA8F6B217842D7 /* ProceduralPCMGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProceduralPCMGenerator.swift; sourceTree = "<group>"; };
+		5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libprojectM.xcframework; path = Frameworks/libprojectM.xcframework; sourceTree = "<group>"; };
+		58B5A3AD507A10621DA8383D /* MusicKitSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicKitSource.swift; sourceTree = "<group>"; };
+		5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectMRenderer.swift; sourceTree = "<group>"; };
+		5CA192DA05D310D4EF3CFC9A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		6229646C9180D197E49FD5CC /* VisualizerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizerViewController.swift; sourceTree = "<group>"; };
+		633C4F41819226F2A260F069 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		647BBE68FF8E329F00D43B76 /* ProjectMBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProjectMBridge.h; sourceTree = "<group>"; };
+		74D004B1C426FB0B8F261ABD /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		79E67B22BE8359618AF6ADA9 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
+		7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
+		80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputCommand.swift; sourceTree = "<group>"; };
+		8877665544332211FFEEDDCC /* FlapJaxReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapJaxReceiver.swift; sourceTree = "<group>"; };
+		88CD6169B551623C0F871889 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizerContainerView.swift; sourceTree = "<group>"; };
+		907E8A0940A03655BFCDAB35 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		951D6C4C6460EF43813637A4 /* Blit.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Blit.metal; sourceTree = "<group>"; };
+		9C73B56F467727875E27D5C0 /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
+		A37DAD3051AB1D908472DFC7 /* PresetBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetBrowserView.swift; sourceTree = "<group>"; };
+		A4D97ECC1B577142DE0697C2 /* MusicBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrowserView.swift; sourceTree = "<group>"; };
+		AAEDCF9D3900E61642FF91C0 /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
+		B3D8B1F1E14D95C27095A049 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		E1C0FA70D71B8A8A1F4B7C02 /* WaitingForClientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingForClientView.swift; sourceTree = "<group>"; };
+		E1C0FA70D71B8A8A1F4B7C04 /* QRCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeView.swift; sourceTree = "<group>"; };
+		E2D1F9A8C6B0490F7E3A0011 /* DebugOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlayView.swift; sourceTree = "<group>"; };
+		B42F52CFE8968EF77045E74D /* ProjectMBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProjectMBridge.m; sourceTree = "<group>"; };
+		B527478651FEC90AB4E4F181 /* PresetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetLibrary.swift; sourceTree = "<group>"; };
+		BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLMetalBridge.swift; sourceTree = "<group>"; };
+		CC29242D152262F8F9F36BCF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderEngine.swift; sourceTree = "<group>"; };
+		D51CDE95FC1D2E7B91D46285 /* AppleJaxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleJaxApp.swift; sourceTree = "<group>"; };
+		EDF7604856BF331BAA1E057C /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
+		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4136CCED8D4A759222B30D25 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD244167E0A5794ADD4D223A /* libprojectM.xcframework in Frameworks */,
+				2094CFF222EEBA5A38D2B23D /* OpenGLES.framework in Frameworks */,
+				9DC07BA76D907717682E24BC /* Metal.framework in Frameworks */,
+				839569D3908FCDDF4042BA31 /* MetalKit.framework in Frameworks */,
+				B21DE7780DA1BE8283D540F8 /* CoreVideo.framework in Frameworks */,
+				E841557D488630C18F5EA39A /* AVFoundation.framework in Frameworks */,
+				44961D44EF2B8092D53DBFDA /* GameController.framework in Frameworks */,
+				2306A73E68AD76F47FB0BFB6 /* CoreMedia.framework in Frameworks */,
+				87F5DE962B17BEAC18261345 /* UIKit.framework in Frameworks */,
+				A6C2086C5180DB24A6E623B8 /* MusicKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07BF515D28FA1B3F9EACEA02 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				633C4F41819226F2A260F069 /* AVFoundation.framework */,
+				EDF7604856BF331BAA1E057C /* CoreMedia.framework */,
+				5CA192DA05D310D4EF3CFC9A /* CoreVideo.framework */,
+				394525C51E47689B9DFEAC4A /* GameController.framework */,
+				5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */,
+				88CD6169B551623C0F871889 /* Metal.framework */,
+				1D26DA5AC7B690609CA39BBD /* MetalKit.framework */,
+				79E67B22BE8359618AF6ADA9 /* MusicKit.framework */,
+				7E5392C4F6DD0ECC66D91FD1 /* OpenGLES.framework */,
+				3A56952D50272E45B00CDE78 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		118A51CEC6050ABB429A7BBA = {
+			isa = PBXGroup;
+			children = (
+				323FC9E8A1468F05BEF83CCB /* appleJax */,
+				1122AABB3344CCDD5566EEFF /* Resources/presets */,
+				07BF515D28FA1B3F9EACEA02 /* Frameworks */,
+				567AAFCF4E2EE43CAD44B201 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2A2CB35E77986198E313F18B /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				8877665544332211FFEEDDCC /* FlapJaxReceiver.swift */,
+				130FF7216F5CE458FB5EAF8A /* AudioController.swift */,
+				0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */,
+				58B5A3AD507A10621DA8383D /* MusicKitSource.swift */,
+				23DB093954D9DCC7CBE225BB /* PCMRingBuffer.swift */,
+				47E9C43C30CA8F6B217842D7 /* ProceduralPCMGenerator.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		2E6C0E5D77741422D2F4715E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AAEDCF9D3900E61642FF91C0 /* AcknowledgementsView.swift */,
+				A4D97ECC1B577142DE0697C2 /* MusicBrowserView.swift */,
+				F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */,
+				A37DAD3051AB1D908472DFC7 /* PresetBrowserView.swift */,
+				B3D8B1F1E14D95C27095A049 /* RootView.swift */,
+				22CC427AE55774D5AD4FBDDD /* SourcePickerView.swift */,
+				89C15101B1AE0572E045F550 /* VisualizerContainerView.swift */,
+				E1C0FA70D71B8A8A1F4B7C02 /* WaitingForClientView.swift */,
+				E1C0FA70D71B8A8A1F4B7C04 /* QRCodeView.swift */,
+				E2D1F9A8C6B0490F7E3A0011 /* DebugOverlayView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		302C88C5129A9094470798C4 /* Presets */ = {
+			isa = PBXGroup;
+			children = (
+				B527478651FEC90AB4E4F181 /* PresetLibrary.swift */,
+			);
+			path = Presets;
+			sourceTree = "<group>";
+		};
+		323FC9E8A1468F05BEF83CCB /* appleJax */ = {
+			isa = PBXGroup;
+			children = (
+				FA20882B178157A3ACD5DAF5 /* Assets.xcassets */,
+				CC29242D152262F8F9F36BCF /* Info.plist */,
+				EDD15513C88C9B916405B8AF /* App */,
+				2A2CB35E77986198E313F18B /* Audio */,
+				EB5A7079C49AAD7A22F5DC5A /* Input */,
+				302C88C5129A9094470798C4 /* Presets */,
+				507E256BA5FA31F8D1137561 /* Util */,
+				2E6C0E5D77741422D2F4715E /* Views */,
+				CBEB8F80B232DA6DD4EB65B5 /* Visualizer */,
+			);
+			path = "appleJax";
+			sourceTree = "<group>";
+		};
+		3283B2F4F438ADBDC63B283A /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				951D6C4C6460EF43813637A4 /* Blit.metal */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
+		507E256BA5FA31F8D1137561 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				01AE67FF24E82876E63F5316 /* BPMEstimator.swift */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		567AAFCF4E2EE43CAD44B201 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				42BA78CFDA3451C9B4CD7C97 /* appleJax.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CBEB8F80B232DA6DD4EB65B5 /* Visualizer */ = {
+			isa = PBXGroup;
+			children = (
+				BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */,
+				9C73B56F467727875E27D5C0 /* MetalRenderer.swift */,
+				647BBE68FF8E329F00D43B76 /* ProjectMBridge.h */,
+				B42F52CFE8968EF77045E74D /* ProjectMBridge.m */,
+				5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */,
+				CC7F4A1B9D3E82F650A14321 /* RenderEngine.swift */,
+				6229646C9180D197E49FD5CC /* VisualizerViewController.swift */,
+				3283B2F4F438ADBDC63B283A /* Shaders */,
+			);
+			path = Visualizer;
+			sourceTree = "<group>";
+		};
+		EB5A7079C49AAD7A22F5DC5A /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				80382BD0DDC327CDFC99ECF1 /* InputCommand.swift */,
+				0DCFBB6DD2AAFD5D5707B28C /* RemoteInputHandler.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		EDD15513C88C9B916405B8AF /* App */ = {
+			isa = PBXGroup;
+			children = (
+				907E8A0940A03655BFCDAB35 /* AppState.swift */,
+				74D004B1C426FB0B8F261ABD /* Logger.swift */,
+				D51CDE95FC1D2E7B91D46285 /* AppleJaxApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F6BCE94E07AF72AD8448B93F /* appleJax */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DDE7D499D49428F48433E566 /* Build configuration list for PBXNativeTarget "appleJax" */;
+			buildPhases = (
+				88F53B1D3C1864B8422D7F86 /* Sources */,
+				899B46CBDD85180255F8AADE /* Resources */,
+				4136CCED8D4A759222B30D25 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "appleJax";
+			packageProductDependencies = (
+			);
+			productName = "appleJax";
+			productReference = 42BA78CFDA3451C9B4CD7C97 /* appleJax.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		911BCDBF327CA82309FC5FFF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					F6BCE94E07AF72AD8448B93F = {
+						DevelopmentTeam = X6N4DF258V;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 82E90CA1224B52D5534BE5E6 /* Build configuration list for PBXProject "appleJax" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 118A51CEC6050ABB429A7BBA;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 567AAFCF4E2EE43CAD44B201 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F6BCE94E07AF72AD8448B93F /* appleJax */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		899B46CBDD85180255F8AADE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE1E46B579352E0A7F7E96BF /* Assets.xcassets in Resources */,
+				AABBCCDD11223344EEFF5566 /* Resources/presets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		88F53B1D3C1864B8422D7F86 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4813C20AED89721450B98D58 /* AcknowledgementsView.swift in Sources */,
+				FE2EF29C95E18C6A3DA57353 /* AppState.swift in Sources */,
+				5F1BBE89F97A4C8C64F8FD21 /* AudioController.swift in Sources */,
+				BB22CC33DD44EE55FF667788 /* FlapJaxReceiver.swift in Sources */,
+				F8B1B23FBD566C9046F8700C /* AudioEngineSource.swift in Sources */,
+				DEDF9B58165C2AFB1647B5FE /* BPMEstimator.swift in Sources */,
+				BDF8E680AACF494DFF4EDCE2 /* Blit.metal in Sources */,
+				5EC9DC1A61C15E7154410892 /* GLMetalBridge.swift in Sources */,
+				2C250299439EAFE7460D91AC /* InputCommand.swift in Sources */,
+				5CE0C4A2FD11D56AB7789975 /* Logger.swift in Sources */,
+				E528AF015306423DC764A24F /* MetalRenderer.swift in Sources */,
+				38B81C83985EC0E6CFCE0F12 /* MusicBrowserView.swift in Sources */,
+				9F1B4AD9881C8FB1FC6288B2 /* MusicKitSource.swift in Sources */,
+				799FDB370D7D9730B230E72F /* OverlayView.swift in Sources */,
+				36547C8BD71D9C6908B56779 /* PCMRingBuffer.swift in Sources */,
+				9C606D41DFDDF505508B85E9 /* PresetBrowserView.swift in Sources */,
+				0475F82EC600819C21D943F6 /* PresetLibrary.swift in Sources */,
+				90EFE46B9AE298FB48E87E1B /* ProceduralPCMGenerator.swift in Sources */,
+				B248B658893E5D6B696841A2 /* ProjectMBridge.m in Sources */,
+				DD391FCF0C474BB3810EFE4F /* ProjectMRenderer.swift in Sources */,
+				A67916C8B8B5642B506D6433 /* AppleJaxApp.swift in Sources */,
+				EF6D696C7221BDF07A0D131B /* RemoteInputHandler.swift in Sources */,
+				D238A4B0CAC0BD37D681569A /* RootView.swift in Sources */,
+				52CE109D2066836DB3B54273 /* SourcePickerView.swift in Sources */,
+				7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */,
+				E1C0FA70D71B8A8A1F4B7C01 /* WaitingForClientView.swift in Sources */,
+				E1C0FA70D71B8A8A1F4B7C03 /* QRCodeView.swift in Sources */,
+				E2D1F9A8C6B0490F7E3A0010 /* DebugOverlayView.swift in Sources */,
+				AB83E219C4F07B5D16902847 /* RenderEngine.swift in Sources */,
+				33B81DD01BB5F88F66A7586C /* VisualizerViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0E25AF3BCC489749B517AD9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Frameworks\"",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Frameworks/libprojectM.xcframework/tvos-arm64/Headers";
+				INFOPLIST_FILE = "appleJax/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-lstdc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.joshpointer.applejax;
+				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "appleJax/Visualizer/ProjectMBridge.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		815B6D93AD09748B6A7CAAD2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X6N4DF258V;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		9BE933205DBCA3561C4BA7FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = X6N4DF258V;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		D9CABF86DB6220963116BF4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGNING_ALLOWED[sdk=appletvsimulator*]" = NO;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Frameworks\"",
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Frameworks/libprojectM.xcframework/tvos-arm64/Headers";
+				INFOPLIST_FILE = "appleJax/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-lstdc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.joshpointer.applejax;
+				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "appleJax/Visualizer/ProjectMBridge.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		82E90CA1224B52D5534BE5E6 /* Build configuration list for PBXProject "appleJax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				815B6D93AD09748B6A7CAAD2 /* Debug */,
+				9BE933205DBCA3561C4BA7FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DDE7D499D49428F48433E566 /* Build configuration list for PBXNativeTarget "appleJax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9CABF86DB6220963116BF4A /* Debug */,
+				0E25AF3BCC489749B517AD9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 911BCDBF327CA82309FC5FFF /* Project object */;
+}
