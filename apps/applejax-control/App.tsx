@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import { Buffer } from 'buffer';
 import TcpSocket from 'react-native-tcp-socket';
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 
 import AppleJaxAudio from './modules/applejax-audio';
 
@@ -33,17 +35,40 @@ export default function App() {
   const [starting, setStarting] = useState(false);
 
   const socketRef = useRef<ReturnType<typeof TcpSocket.createConnection> | null>(null);
-  const pausedRef = useRef(false);
   const rmsRef = useRef(0);
   const sentChunksRef = useRef(0);
   const droppedRef = useRef(0);
+  // Bounded ring of un-sent frames. Caps memory + audio latency at ~370ms
+  // (8 frames × ~46ms each). On overflow we drop the OLDEST frame so the
+  // visualizer stays close to live; the dropped counter is exposed in the UI.
+  const queueRef = useRef<Buffer[]>([]);
+  const queuedFramesRef = useRef(0);
+  const QUEUE_CAP = 8;
+
+  // Try to push as many frames as TcpSocket will accept without backpressure.
+  // Returns when the socket either reports backpressure (write returns false)
+  // or the queue is empty. Safe to call from both 'pcm' and 'drain' handlers.
+  const flushQueue = useCallback(() => {
+    const sock = socketRef.current;
+    if (!sock) return;
+    while (queueRef.current.length > 0) {
+      const frame = queueRef.current.shift()!;
+      const ok = sock.write(frame as any);
+      sentChunksRef.current += 1;
+      if (ok === false) {
+        // Backpressure: stop flushing. 'drain' will fire later and call us again.
+        break;
+      }
+    }
+    queuedFramesRef.current = queueRef.current.length;
+  }, []);
 
   // Subscribe to PCM events
   useEffect(() => {
     const pcmSub = AppleJaxAudio.addListener('pcm', ({ data, rms: r }) => {
       rmsRef.current = r;
       const sock = socketRef.current;
-      if (!sock || pausedRef.current) {
+      if (!sock) {
         droppedRef.current += 1;
         return;
       }
@@ -53,9 +78,14 @@ export default function App() {
         MAGIC.copy(frame, 0);
         frame.writeUInt32LE(payload.length, 4);
         payload.copy(frame, HEADER_SIZE);
-        const ok = sock.write(frame as any);
-        if (ok === false) pausedRef.current = true;
-        sentChunksRef.current += 1;
+        // Cap the queue: if full, drop the oldest frame so we stay near live.
+        if (queueRef.current.length >= QUEUE_CAP) {
+          queueRef.current.shift();
+          droppedRef.current += 1;
+        }
+        queueRef.current.push(frame);
+        queuedFramesRef.current = queueRef.current.length;
+        flushQueue();
       } catch (e) {
         console.warn('[appleJax] pcm write error:', e);
         droppedRef.current += 1;
@@ -73,41 +103,54 @@ export default function App() {
     };
   }, []);
 
-  const connect = useCallback(() => {
-    const portNum = parseInt(port, 10);
-    if (!host || !portNum) {
+  const connectTo = useCallback((targetHost: string, targetPort: string) => {
+    const portNum = parseInt(targetPort, 10);
+    if (!targetHost || !portNum) {
       Alert.alert('Bad address', 'Enter host and port.');
       return;
     }
+    // Tear down any existing socket cleanly before opening a new one — avoids the
+    // "two sockets, both holding the queue" race when scanning a fresh QR.
+    if (socketRef.current) {
+      try { socketRef.current.destroy(); } catch {}
+      socketRef.current = null;
+    }
     setConn('connecting');
-    setStatus(`Connecting to ${host}:${portNum}…`);
+    setStatus(`Connecting to ${targetHost}:${portNum}…`);
     const sock = TcpSocket.createConnection(
-      { host, port: portNum, tls: false },
+      { host: targetHost, port: portNum, tls: false },
       () => {
-        console.log(`[appleJax] connected to ${host}:${portNum}`);
+        console.log(`[appleJax] connected to ${targetHost}:${portNum}`);
+        try { sock.setNoDelay?.(true); } catch {}
         setConn('connected');
-        setStatus(`Connected to ${host}:${portNum}`);
+        setStatus(`Connected to ${targetHost}:${portNum}`);
       }
     );
     sock.on('error', (err: Error) => {
       console.error('[appleJax] socket error:', err.message);
       setConn('error');
       setStatus(`Socket error: ${err.message}`);
-      pausedRef.current = false;
+      queueRef.current = [];
+      queuedFramesRef.current = 0;
       socketRef.current = null;
     });
     sock.on('close', () => {
       console.log('[appleJax] socket closed');
       setConn('disconnected');
       setStatus('Disconnected');
-      pausedRef.current = false;
+      queueRef.current = [];
+      queuedFramesRef.current = 0;
       socketRef.current = null;
     });
     sock.on('drain', () => {
-      pausedRef.current = false;
+      flushQueue();
     });
     socketRef.current = sock;
-  }, [host, port]);
+  }, [flushQueue]);
+
+  const connect = useCallback(() => {
+    connectTo(host, port);
+  }, [connectTo, host, port]);
 
   const disconnect = useCallback(() => {
     socketRef.current?.destroy();
@@ -115,6 +158,53 @@ export default function App() {
     setConn('disconnected');
     setStatus('Disconnected');
   }, []);
+
+  // QR scanning state. Camera permission is requested lazily — only when the user
+  // taps "Scan QR" — so the app doesn't ask on first launch.
+  const [scanning, setScanning] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const handledScan = useRef(false);
+
+  // Accepts: applejax://host:port  |  http(s)://host:port  |  host:port
+  const parsePairingCode = useCallback((raw: string): { host: string; port: string } | null => {
+    let body = raw.trim();
+    body = body.replace(/^applejax:\/\//i, '').replace(/^https?:\/\//i, '');
+    body = body.split('/')[0]; // drop trailing path
+    const idx = body.lastIndexOf(':');
+    if (idx <= 0) return null;
+    const h = body.substring(0, idx);
+    const p = body.substring(idx + 1);
+    if (!h || !/^\d+$/.test(p)) return null;
+    return { host: h, port: p };
+  }, []);
+
+  const openScanner = useCallback(async () => {
+    if (!permission?.granted) {
+      const r = await requestPermission();
+      if (!r.granted) {
+        Alert.alert('Camera access needed', 'Enable camera access in Settings to scan QR codes.');
+        return;
+      }
+    }
+    handledScan.current = false;
+    setScanning(true);
+  }, [permission, requestPermission]);
+
+  const onBarcode = useCallback((result: BarcodeScanningResult) => {
+    if (handledScan.current) return; // CameraView fires multiple times per QR
+    handledScan.current = true;
+    const parsed = parsePairingCode(result.data);
+    setScanning(false);
+    if (!parsed) {
+      Alert.alert('Bad QR', `Couldn't parse "${result.data}". Expected host:port.`);
+      return;
+    }
+    setHost(parsed.host);
+    setPort(parsed.port);
+    // Connect immediately with the parsed values — don't wait for setHost/setPort
+    // to flush through React state, otherwise `connect()` would still see stale args.
+    connectTo(parsed.host, parsed.port);
+  }, [parsePairingCode, connectTo]);
 
   const startMic = useCallback(async () => {
     try {
@@ -176,7 +266,16 @@ export default function App() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>tvOS host</Text>
+        <Text style={styles.label}>Pair with Apple TV</Text>
+        <Pressable
+          style={[styles.button, conn === 'connected' ? styles.buttonDanger : styles.buttonPrimary]}
+          onPress={conn === 'connected' ? disconnect : openScanner}
+        >
+          <Text style={styles.buttonText}>
+            {conn === 'connected' ? 'Disconnect' : conn === 'connecting' ? 'Connecting…' : 'Scan QR Code'}
+          </Text>
+        </Pressable>
+        <Text style={styles.label}>or enter manually</Text>
         <View style={styles.row}>
           <TextInput
             style={[styles.input, { flex: 3 }]}
@@ -198,16 +297,46 @@ export default function App() {
             placeholderTextColor="#555"
             editable={conn !== 'connected'}
           />
+          <Pressable
+            style={[styles.button, styles.buttonSecondary, conn === 'connected' ? styles.buttonDisabled : null]}
+            disabled={conn === 'connected'}
+            onPress={connect}
+          >
+            <Text style={styles.buttonText}>Go</Text>
+          </Pressable>
         </View>
-        <Pressable
-          style={[styles.button, conn === 'connected' ? styles.buttonDanger : styles.buttonPrimary]}
-          onPress={conn === 'connected' ? disconnect : connect}
-        >
-          <Text style={styles.buttonText}>
-            {conn === 'connected' ? 'Disconnect' : conn === 'connecting' ? 'Connecting…' : 'Connect'}
-          </Text>
-        </Pressable>
       </View>
+
+      <Modal
+        visible={scanning}
+        animationType="slide"
+        onRequestClose={() => setScanning(false)}
+      >
+        <View style={styles.scannerContainer}>
+          {permission?.granted ? (
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+              onBarcodeScanned={onBarcode}
+            />
+          ) : (
+            <View style={styles.scannerPermission}>
+              <Text style={styles.buttonText}>Camera access needed to scan.</Text>
+            </View>
+          )}
+          <View style={styles.scannerOverlay} pointerEvents="box-none">
+            <View style={styles.scannerReticle} />
+            <Text style={styles.scannerHint}>Point camera at the QR code on your Apple TV</Text>
+            <Pressable
+              style={[styles.button, styles.buttonDanger, styles.scannerCancel]}
+              onPress={() => setScanning(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.section}>
         <Text style={styles.label}>Source</Text>
@@ -244,7 +373,11 @@ export default function App() {
 
       <View style={styles.section}>
         <Text style={styles.label}>Level</Text>
-        <LevelMeter rmsRef={rmsRef} droppedRef={droppedRef} />
+        <LevelMeter
+          rmsRef={rmsRef}
+          droppedRef={droppedRef}
+          queuedFramesRef={queuedFramesRef}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -256,20 +389,23 @@ export default function App() {
 function LevelMeter({
   rmsRef,
   droppedRef,
+  queuedFramesRef,
 }: {
   rmsRef: React.MutableRefObject<number>;
   droppedRef: React.MutableRefObject<number>;
+  queuedFramesRef: React.MutableRefObject<number>;
 }) {
-  const [display, setDisplay] = useState({ width: 0, dropped: 0 });
+  const [display, setDisplay] = useState({ width: 0, dropped: 0, queued: 0 });
   useEffect(() => {
     const id = setInterval(() => {
       setDisplay({
         width: Math.min(100, Math.round(rmsRef.current * 400)),
         dropped: droppedRef.current,
+        queued: queuedFramesRef.current,
       });
     }, 50);
     return () => clearInterval(id);
-  }, [rmsRef, droppedRef]);
+  }, [rmsRef, droppedRef, queuedFramesRef]);
   return (
     <>
       <View style={styles.meter}>
@@ -277,6 +413,7 @@ function LevelMeter({
       </View>
       <Text style={styles.meta}>
         22050 Hz · mono · 1024-frame chunks
+        {display.queued > 0 ? ` · queued ${display.queued}` : ''}
         {display.dropped > 0 ? ` · ${display.dropped} dropped` : ''}
       </Text>
     </>
@@ -320,5 +457,32 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   meter: { height: 14, backgroundColor: '#1a1a1d', borderRadius: 7, overflow: 'hidden' },
   meterFill: { height: '100%', backgroundColor: '#16a34a' },
-  meta: { color: '#9aa', fontSize: 12 }
+  meta: { color: '#9aa', fontSize: 12 },
+  scannerContainer: { flex: 1, backgroundColor: '#000' },
+  scannerPermission: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  scannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 80,
+    paddingTop: 80,
+  },
+  scannerReticle: {
+    width: 240,
+    height: 240,
+    borderColor: '#ffffff',
+    borderWidth: 3,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+  },
+  scannerHint: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 24,
+    textAlign: 'center',
+    textShadowColor: '#000',
+    textShadowRadius: 4,
+  },
+  scannerCancel: { marginTop: 'auto', alignSelf: 'stretch' },
 });

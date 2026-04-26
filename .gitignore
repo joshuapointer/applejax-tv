@@ -62,3 +62,4 @@ cmake-build-*
 build-tvos/
 apps/tvos16/build/
 apps/tvos16/build-sim/
+apps/tvos16/.omc/

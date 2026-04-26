@@ -19,6 +19,7 @@
       "infoPlist": {
         "NSMicrophoneUsageDescription": "appleJax Control captures microphone audio to drive the visualizer on your Apple TV.",
         "NSLocalNetworkUsageDescription": "appleJax Control streams audio data to the appleJax tvOS app on your local network.",
+        "NSCameraUsageDescription": "appleJax Control uses the camera to scan the QR code shown on your Apple TV for one-tap pairing.",
         "NSAppleMusicUsageDescription": "appleJax Control reads your local music library so you can stream owned tracks to the visualizer.",
         "UIBackgroundModes": [
           "audio",

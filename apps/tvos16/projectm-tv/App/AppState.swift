@@ -30,6 +30,9 @@ final class AppState: ObservableObject {
     @Published var nowPlaying: NowPlayingInfo?
     @Published var currentPresetName: String = "(none)"
     @Published var lastInteractionTime: TimeInterval = CACurrentMediaTime()
+    /// True while an iPhone client is actively connected to AppleJaxReceiver.
+    /// Drives the QR pairing overlay: visible when no client, hidden when paired.
+    @Published var appleJaxClientConnected: Bool = false
 
     // Shared controllers
     let audioController = AudioController()

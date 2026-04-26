@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"tail -10 /private/tmp/claude-502/-Users-j0g19tc-Developer-projectm-tv/07e5b251-ba25-4b84-984a-7b0f33101828/tasks/btsjf4xke.output\",\"description\":\"See monitor failure reason\"}",
-  "error": "Exit code 1\ntail: /private/tmp/claude-502/-Users-j0g19tc-Developer-projectm-tv/07e5b251-ba25-4b84-984a-7b0f33101828/tasks/btsjf4xke.output: No such file or directory",
-  "timestamp": "2026-04-26T03:18:10.860Z",
-  "retry_count": 1
-}

@@ -69,7 +69,14 @@ final class VisualizerViewController: UIViewController {
         // avoiding any race between thread startup and the first preset load.
         if let lib = presetLibrary, let url = lib.next() {
             engine.requestPreset(url, smooth: false)
-            appState?.currentPresetName = url.deletingPathExtension().lastPathComponent
+            // Defer the @Published mutation: setupRendering can be called inside the SwiftUI
+            // view-update cycle (UIViewControllerRepresentable host), and mutating ObservableObject
+            // state synchronously there triggers "Publishing changes from within view updates is not
+            // allowed". Hopping to the next runloop tick avoids the warning without losing the update.
+            let presetName = url.deletingPathExtension().lastPathComponent
+            DispatchQueue.main.async { [weak self] in
+                self?.appState?.currentPresetName = presetName
+            }
         }
 
         engine.start()

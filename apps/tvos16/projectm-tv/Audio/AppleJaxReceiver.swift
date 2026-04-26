@@ -22,6 +22,11 @@ final class AppleJaxReceiver: AudioSource {
     private let port: NWEndpoint.Port
     private let queue = DispatchQueue(label: "applejax.receiver", qos: .userInteractive)
 
+    /// Fired on the receiver's `queue` whenever a client connects (true) or disconnects
+    /// (false). Used by the UI to show/hide the QR pairing overlay. Hop to main before
+    /// touching SwiftUI state.
+    var onClientChange: ((Bool) -> Void)?
+
     private var listener: NWListener?
     private var connection: NWConnection?
     private var inbox = Data()  // accumulated unparsed bytes
@@ -140,7 +145,8 @@ final class AppleJaxReceiver: AudioSource {
             guard let self else { return }
             switch state {
             case .ready:
-                audioLogger.info("AppleJaxReceiver client connected: \(desc)")
+                audioLogger.notice("AppleJaxReceiver client connected: \(desc, privacy: .public)")
+                self.onClientChange?(true)
                 self.scheduleReceive(on: conn)
             case .failed(let err):
                 audioLogger.error("AppleJaxReceiver client failed: \(err.localizedDescription)")
@@ -160,6 +166,7 @@ final class AppleJaxReceiver: AudioSource {
             self.connection = nil
             self.inbox.removeAll(keepingCapacity: false)
             setClientDescription("(no client)")
+            self.onClientChange?(false)
         }
     }
 

@@ -5,53 +5,48 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            switch appState.phase {
-            case .picker:
-                SourcePickerView(onSelectSource: { source in
-                    switch source {
-                    case .appleMusic:
-                        appState.phase = .musicBrowser
-                    case .appleJax:
-                        appState.proceduralGenerator?.stop()
-                        appState.proceduralGenerator = nil
-                        let receiver = AppleJaxReceiver(ringBuffer: appState.audioController.ringBuffer)
-                        do {
-                            try receiver.start()
-                            appState.appleJaxReceiver = receiver
-                            appState.activeSource = .appleJax
-                            appState.phase = .visualizing
-                        } catch {
-                            audioLogger.error("AppleJax receiver start failed: \(error.localizedDescription)")
-                        }
-                    case .localFile, .idle:
-                        appState.appleJaxReceiver?.stop()
-                        appState.appleJaxReceiver = nil
-                        // Start procedural beat generator so the visualizer reacts
-                        let gen = ProceduralPCMGenerator(ringBuffer: appState.audioController.ringBuffer)
-                        gen.start()
-                        appState.proceduralGenerator = gen  // hold reference
-                        appState.activeSource = source
-                        appState.phase = .visualizing
-                    }
-                })
+            // Visualizer is always live in the background. It renders silence (or
+            // the procedural placeholder) until the iPhone client starts streaming;
+            // the QR overlay covers it until that happens.
+            VisualizerContainerView()
+                .ignoresSafeArea()
 
-            case .musicBrowser:
-                MusicBrowserView()
-
-            case .visualizing:
-                VisualizerContainerView()
-                    .ignoresSafeArea()
-
+            if appState.appleJaxClientConnected {
                 OverlayView()
-
                 if appState.isPresetBrowserVisible {
                     PresetBrowserView()
                         .ignoresSafeArea()
                 }
+            } else {
+                WaitingForClientView()
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: appState.appleJaxClientConnected)
         .task {
-            appState.restore()
+            startAppleJaxIfNeeded()
+        }
+    }
+
+    /// Starts the AppleJax receiver on first appearance. The QR pairing overlay covers
+    /// the (silent) visualizer until an iPhone client connects; after that, real PCM
+    /// from the iPhone drives projectM. The receiver's onClientChange drives the overlay
+    /// via @Published state on AppState.
+    private func startAppleJaxIfNeeded() {
+        guard appState.appleJaxReceiver == nil else { return }
+        let receiver = AppleJaxReceiver(ringBuffer: appState.audioController.ringBuffer)
+        receiver.onClientChange = { [weak appState = self.appState] connected in
+            DispatchQueue.main.async {
+                appState?.appleJaxClientConnected = connected
+                appState?.activeSource = connected ? .appleJax : .idle
+            }
+        }
+        do {
+            try receiver.start()
+            appState.appleJaxReceiver = receiver
+            appState.phase = .visualizing
+        } catch {
+            audioLogger.error("AppleJax receiver start failed: \(error.localizedDescription)")
         }
     }
 }

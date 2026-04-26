@@ -236,12 +236,18 @@ final class RenderEngine: NSObject {
 
         guard let (fbo, mtlTexture) = bridge.nextFramebuffer() else { return }
 
+        // Drain the ring buffer fully each frame, capped at 4096 frames so a single
+        // render call can't get stuck pushing minutes of backlog. At 60 fps this is
+        // exactly what 48 kHz audio produces; at the simulator's ~30 fps it lets us
+        // catch up without leaving frames behind in the ring (which the receiver
+        // would otherwise have to drop on overflow).
         if let rb = audioController?.ringBuffer {
-            let n = rb.read(into: pcmBuffer, maxFrames: Self.maxPCMFrames)
-            if n > 0 {
+            var totalDrained = 0
+            while totalDrained < 4096 {
+                let n = rb.read(into: pcmBuffer, maxFrames: Self.maxPCMFrames)
+                if n == 0 { break }
                 projectMRenderer.addPCM(pcmBuffer, frameCount: UInt32(n), channels: 2)
                 audioFramesPumped += n
-                // Sample a handful of frames per chunk for an amplitude estimate — cheap.
                 let sampleStride = max(1, n / 16)
                 var i = 0
                 while i < n {
@@ -251,6 +257,8 @@ final class RenderEngine: NSObject {
                     audioAmpSamples += 1
                     i += sampleStride
                 }
+                totalDrained += n
+                if n < Self.maxPCMFrames { break }  // ring is empty
             }
         }
 
