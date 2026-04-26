@@ -13,7 +13,7 @@ import {
   View
 } from 'react-native';
 import { Buffer } from 'buffer';
-import TcpSocket from 'react-native-tcp-socket';
+import dgram from 'react-native-udp';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 
 import AppleJaxAudio from './modules/applejax-audio';
@@ -34,60 +34,62 @@ export default function App() {
   // Prevents a second tap while startMic/playFile is in-flight (before state event arrives)
   const [starting, setStarting] = useState(false);
 
-  const socketRef = useRef<ReturnType<typeof TcpSocket.createConnection> | null>(null);
+  // UDP transport: each PCM chunk is fired as a single datagram. Backpressure
+  // can't head-of-line block later audio (unlike TCP) — kernel either accepts
+  // the datagram or drops it, with at most a single ~46 ms glitch on loss.
+  // No queue, no `'drain'` handshake, no reconnect choreography.
+  const udpSocketRef = useRef<ReturnType<typeof dgram.createSocket> | null>(null);
+  const targetRef = useRef<{ host: string; port: number } | null>(null);
   const rmsRef = useRef(0);
   const sentChunksRef = useRef(0);
   const droppedRef = useRef(0);
-  // Bounded ring of un-sent frames. Caps memory + audio latency at ~370ms
-  // (8 frames × ~46ms each). On overflow we drop the OLDEST frame so the
-  // visualizer stays close to live; the dropped counter is exposed in the UI.
-  const queueRef = useRef<Buffer[]>([]);
-  const queuedFramesRef = useRef(0);
-  const QUEUE_CAP = 8;
 
-  // Try to push as many frames as TcpSocket will accept without backpressure.
-  // Returns when the socket either reports backpressure (write returns false)
-  // or the queue is empty. Safe to call from both 'pcm' and 'drain' handlers.
-  const flushQueue = useCallback(() => {
-    const sock = socketRef.current;
-    if (!sock) return;
-    while (queueRef.current.length > 0) {
-      const frame = queueRef.current.shift()!;
-      const ok = sock.write(frame as any);
-      sentChunksRef.current += 1;
-      if (ok === false) {
-        // Backpressure: stop flushing. 'drain' will fire later and call us again.
-        break;
-      }
-    }
-    queuedFramesRef.current = queueRef.current.length;
+  // Lazily create the UDP socket on first use; keep it for the app lifetime.
+  // We never close it on "disconnect" — we just clear targetRef so PCM events
+  // become no-ops.
+  const ensureSocket = useCallback(() => {
+    if (udpSocketRef.current) return udpSocketRef.current;
+    const sock = dgram.createSocket({ type: 'udp4' });
+    sock.on('error', (err: Error) => {
+      console.warn('[appleJax] udp socket error:', err.message);
+    });
+    sock.bind(0); // ephemeral local port
+    udpSocketRef.current = sock;
+    return sock;
   }, []);
 
   // Subscribe to PCM events
   useEffect(() => {
     const pcmSub = AppleJaxAudio.addListener('pcm', ({ data, rms: r }) => {
       rmsRef.current = r;
-      const sock = socketRef.current;
-      if (!sock) {
+      const target = targetRef.current;
+      if (!target) {
         droppedRef.current += 1;
         return;
       }
       try {
         const payload = Buffer.from(data, 'base64');
-        const frame = Buffer.alloc(HEADER_SIZE + payload.length);
-        MAGIC.copy(frame, 0);
-        frame.writeUInt32LE(payload.length, 4);
-        payload.copy(frame, HEADER_SIZE);
-        // Cap the queue: if full, drop the oldest frame so we stay near live.
-        if (queueRef.current.length >= QUEUE_CAP) {
-          queueRef.current.shift();
-          droppedRef.current += 1;
-        }
-        queueRef.current.push(frame);
-        queuedFramesRef.current = queueRef.current.length;
-        flushQueue();
+        // sampleCount is the count of Float32 samples (mono). The TV-side
+        // header reads this as a uint32_le so it can validate the trailing
+        // payload size = sampleCount * 4 bytes.
+        const sampleCount = (payload.length / 4) | 0;
+        const datagram = Buffer.alloc(HEADER_SIZE + payload.length);
+        MAGIC.copy(datagram, 0);
+        datagram.writeUInt32LE(sampleCount, 4);
+        payload.copy(datagram, HEADER_SIZE);
+        const sock = ensureSocket();
+        sock.send(datagram, 0, datagram.length, target.port, target.host, (err: Error | null) => {
+          if (err) {
+            droppedRef.current += 1;
+            // Throttle: only the first send error per ~1000 attempts to avoid log spam.
+            if (sentChunksRef.current % 1000 === 0) {
+              console.warn('[appleJax] udp send error:', err.message);
+            }
+          }
+        });
+        sentChunksRef.current += 1;
       } catch (e) {
-        console.warn('[appleJax] pcm write error:', e);
+        console.warn('[appleJax] pcm send error:', e);
         droppedRef.current += 1;
       }
     });
@@ -103,58 +105,28 @@ export default function App() {
     };
   }, []);
 
+  // "Connect" is just setting the destination — UDP needs no handshake. We open
+  // (or reuse) the local socket so the first PCM event has somewhere to go, and
+  // mark conn='connected' optimistically. The TV-side derives client-connected
+  // state from packet-arrival recency, so the user experience stays the same.
   const connectTo = useCallback((targetHost: string, targetPort: string) => {
     const portNum = parseInt(targetPort, 10);
     if (!targetHost || !portNum) {
       Alert.alert('Bad address', 'Enter host and port.');
       return;
     }
-    // Tear down any existing socket cleanly before opening a new one — avoids the
-    // "two sockets, both holding the queue" race when scanning a fresh QR.
-    if (socketRef.current) {
-      try { socketRef.current.destroy(); } catch {}
-      socketRef.current = null;
-    }
-    setConn('connecting');
-    setStatus(`Connecting to ${targetHost}:${portNum}…`);
-    const sock = TcpSocket.createConnection(
-      { host: targetHost, port: portNum, tls: false },
-      () => {
-        console.log(`[appleJax] connected to ${targetHost}:${portNum}`);
-        try { sock.setNoDelay?.(true); } catch {}
-        setConn('connected');
-        setStatus(`Connected to ${targetHost}:${portNum}`);
-      }
-    );
-    sock.on('error', (err: Error) => {
-      console.error('[appleJax] socket error:', err.message);
-      setConn('error');
-      setStatus(`Socket error: ${err.message}`);
-      queueRef.current = [];
-      queuedFramesRef.current = 0;
-      socketRef.current = null;
-    });
-    sock.on('close', () => {
-      console.log('[appleJax] socket closed');
-      setConn('disconnected');
-      setStatus('Disconnected');
-      queueRef.current = [];
-      queuedFramesRef.current = 0;
-      socketRef.current = null;
-    });
-    sock.on('drain', () => {
-      flushQueue();
-    });
-    socketRef.current = sock;
-  }, [flushQueue]);
+    ensureSocket();
+    targetRef.current = { host: targetHost, port: portNum };
+    setConn('connected');
+    setStatus(`Streaming to ${targetHost}:${portNum} (UDP)`);
+  }, [ensureSocket]);
 
   const connect = useCallback(() => {
     connectTo(host, port);
   }, [connectTo, host, port]);
 
   const disconnect = useCallback(() => {
-    socketRef.current?.destroy();
-    socketRef.current = null;
+    targetRef.current = null;
     setConn('disconnected');
     setStatus('Disconnected');
   }, []);
@@ -373,11 +345,7 @@ export default function App() {
 
       <View style={styles.section}>
         <Text style={styles.label}>Level</Text>
-        <LevelMeter
-          rmsRef={rmsRef}
-          droppedRef={droppedRef}
-          queuedFramesRef={queuedFramesRef}
-        />
+        <LevelMeter rmsRef={rmsRef} droppedRef={droppedRef} />
       </View>
     </KeyboardAvoidingView>
   );
@@ -389,31 +357,27 @@ export default function App() {
 function LevelMeter({
   rmsRef,
   droppedRef,
-  queuedFramesRef,
 }: {
   rmsRef: React.MutableRefObject<number>;
   droppedRef: React.MutableRefObject<number>;
-  queuedFramesRef: React.MutableRefObject<number>;
 }) {
-  const [display, setDisplay] = useState({ width: 0, dropped: 0, queued: 0 });
+  const [display, setDisplay] = useState({ width: 0, dropped: 0 });
   useEffect(() => {
     const id = setInterval(() => {
       setDisplay({
         width: Math.min(100, Math.round(rmsRef.current * 400)),
         dropped: droppedRef.current,
-        queued: queuedFramesRef.current,
       });
     }, 50);
     return () => clearInterval(id);
-  }, [rmsRef, droppedRef, queuedFramesRef]);
+  }, [rmsRef, droppedRef]);
   return (
     <>
       <View style={styles.meter}>
         <View style={[styles.meterFill, { width: `${display.width}%` }]} />
       </View>
       <Text style={styles.meta}>
-        22050 Hz · mono · 1024-frame chunks
-        {display.queued > 0 ? ` · queued ${display.queued}` : ''}
+        22050 Hz · mono · 1024-frame chunks · UDP
         {display.dropped > 0 ? ` · ${display.dropped} dropped` : ''}
       </Text>
     </>
