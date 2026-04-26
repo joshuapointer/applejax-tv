@@ -11,4 +11,7 @@ enum InputCommand {
     case shufflePresets
     case showPresetBrowser
     case hidePresetBrowser
+    /// Toggles the on-screen DEBUG-only raw-UDP-data overlay. Bound to a double-click
+    /// of the Siri Remote select (TV center) button.
+    case toggleDebugOverlay
 }

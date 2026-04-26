@@ -33,6 +33,11 @@ final class AppState: ObservableObject {
     /// True while an iPhone client is actively connected to AppleJaxReceiver.
     /// Drives the QR pairing overlay: visible when no client, hidden when paired.
     @Published var appleJaxClientConnected: Bool = false
+    #if DEBUG
+    /// Toggled by double-tapping the Siri Remote select button. Shows a corner
+    /// box of recent UDP datagram bytes for protocol-level debugging.
+    @Published var debugOverlayVisible: Bool = false
+    #endif
 
     // Shared controllers
     let audioController = AudioController()

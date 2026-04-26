@@ -1,28 +1,28 @@
 import Foundation
-import Network
+import Darwin
 
 /// UDP datagram receiver for the appleJax Control companion iPhone app.
 ///
-/// Switched from TCP to UDP so that real-time PCM is **drop-tolerant** instead of
-/// **stall-prone**: TCP backpressure (which we hit constantly on Wi-Fi) head-of-lines
-/// every later byte until the kernel's send buffer drains, producing the bursty
-/// 1.6s-then-silence pattern we saw in field testing. UDP just drops the datagram
-/// on the floor, the next one arrives ~46 ms later, and the visualizer never stalls.
+/// Implementation note (v3): switched from `NWListener.udp` to a raw POSIX UDP socket
+/// drained by a `DispatchSourceRead`. The Network-framework path was fundamentally
+/// broken for sustained single-peer UDP receive — once the first datagram from a
+/// given source-tuple was delivered, subsequent datagrams from the same iPhone got
+/// rejected at the kernel with `EEXIST` ("nw_path_evaluator_create_flow_inner …
+/// [17: File exists]"). Net effect: we received exactly one datagram per pairing
+/// then went deaf. BSD sockets sidestep that whole flow-tracking mess and just
+/// hand us every datagram as it arrives.
 ///
-/// Wire protocol (per datagram, max ~4 KB + tiny header → typically 3 IP fragments
-/// on a 1500-MTU LAN; no fragmentation if iPhone splits chunks smaller):
-///
+/// Wire protocol (per datagram):
 ///   bytes 0-3:  ASCII magic "APJX"
 ///   bytes 4-7:  uint32 LE  mono sample count
 ///   bytes 8..:  Float32 LE PCM, mono, 22050 Hz
 ///
-/// Each datagram is independently parseable — no cross-packet state. We resample to
-/// 48 kHz stereo (linear, mono → duplicated channels) and write into the shared
-/// `PCMRingBuffer` exactly the same way the prior TCP path did.
+/// Each datagram is independently parseable. We resample to 48 kHz stereo (linear,
+/// mono → duplicated channels) and write into the shared `PCMRingBuffer`.
 ///
-/// "Client connected" is derived from packet-arrival recency (≤ 1.5s gap = connected),
-/// not from a connection handshake. A DispatchSourceTimer polls the timestamp on the
-/// receiver queue and fires `onClientChange` on transitions.
+/// "Client connected" is derived from packet-arrival recency (≤ 5s gap = connected).
+/// A `DispatchSourceTimer` polls the timestamp on the receiver queue and fires
+/// `onClientChange` on transitions, driving the QR pairing overlay.
 final class AppleJaxReceiver: AudioSource {
     static let defaultPort: UInt16 = 9999
     private static let inSampleRate: Double = 22050
@@ -30,31 +30,53 @@ final class AppleJaxReceiver: AudioSource {
     private static let resampleRatio: Double = inSampleRate / outSampleRate
     private static let magic: [UInt8] = [0x41, 0x50, 0x4A, 0x58] // "APJX"
     private static let headerSize: Int = 8
-    private static let connectedTimeoutSeconds: TimeInterval = 1.5
+    /// 5s of no packets = consider iPhone gone. Wi-Fi blips can lose ~30 consecutive
+    /// 46ms datagrams without it being a real disconnect; 5s comfortably absorbs that.
+    private static let connectedTimeoutSeconds: TimeInterval = 5.0
 
     private let ringBuffer: PCMRingBuffer
-    private let port: NWEndpoint.Port
+    private let port: UInt16
     private let queue = DispatchQueue(label: "applejax.receiver", qos: .userInteractive)
 
     /// Fired on the receiver's `queue` whenever client-connected state transitions.
-    /// Used by the UI to show/hide the QR pairing overlay. Hop to main before touching
-    /// SwiftUI state.
+    /// Hop to main before touching SwiftUI state.
     var onClientChange: ((Bool) -> Void)?
 
-    private var listener: NWListener?
-    /// Per-source flows. NWListener .udp creates a virtual NWConnection for each
-    /// unique src-IP/src-port pair; we hold them in a set so they aren't released
-    /// after the receive callback returns and so we can cancel them in `stop()`.
-    private var flows: [ObjectIdentifier: NWConnection] = [:]
+    private var socketFD: Int32 = -1
+    private var readSource: DispatchSourceRead?
     private var clientTimer: DispatchSourceTimer?
     private var lastPacketAt: TimeInterval = 0
     private var hasClientFlag = false
+
+    // Pre-allocated receive buffer — UDP max payload is 64 KiB but our datagrams are
+    // ~4 KiB. 16 KiB is a safe ceiling that covers any iPhone-side chunk size.
+    private static let recvBufferSize = 16 * 1024
+    private var recvBuffer: UnsafeMutablePointer<UInt8>
 
     // 1Hz diagnostic accumulators — touched only on `queue`, no lock needed.
     private var bytesIn: Int = 0
     private var datagramsParsed: Int = 0
     private var pcmFramesEmitted: Int = 0
     private var diagWindowStart: TimeInterval = 0
+
+    #if DEBUG
+    /// Snapshot of the most recent UDP datagram for the on-screen debug overlay.
+    struct DebugDatagram {
+        let receivedAt: TimeInterval
+        let totalBytes: Int
+        let sampleCount: UInt32
+        let headerHex: String       // first 32 bytes formatted as "ab cd ef …"
+        let firstSamples: [Float]   // first ≤6 decoded mono samples
+    }
+    private var debugLock = os_unfair_lock()
+    private var _debugRing: [DebugDatagram] = []
+    private let debugRingCap = 8
+
+    func debugSnapshot() -> [DebugDatagram] {
+        os_unfair_lock_lock(&debugLock); defer { os_unfair_lock_unlock(&debugLock) }
+        return _debugRing
+    }
+    #endif
 
     // Cross-thread state (UI may read while `queue` writes). Protected by lock.
     private var stateLock = os_unfair_lock()
@@ -92,37 +114,68 @@ final class AppleJaxReceiver: AudioSource {
 
     init(ringBuffer: PCMRingBuffer, port: UInt16 = AppleJaxReceiver.defaultPort) {
         self.ringBuffer = ringBuffer
-        self.port = NWEndpoint.Port(rawValue: port) ?? NWEndpoint.Port(rawValue: AppleJaxReceiver.defaultPort)!
+        self.port = port
+        self.recvBuffer = .allocate(capacity: Self.recvBufferSize)
     }
 
-    // MARK: - AudioSource
+    // MARK: - AudioSource lifecycle
 
     func start() throws {
-        guard listener == nil else { return }
-        let params = NWParameters.udp
-        params.allowLocalEndpointReuse = true
-        let listener = try NWListener(using: params, on: port)
-        listener.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            switch state {
-            case .ready:
-                let p = listener.port?.rawValue ?? 0
-                self.setListenPort(p)
-                audioLogger.notice("AppleJaxReceiver UDP listening on \(p)")
-            case .failed(let err):
-                audioLogger.error("AppleJaxReceiver UDP listener failed: \(err.localizedDescription)")
-            case .cancelled:
-                audioLogger.info("AppleJaxReceiver UDP listener cancelled")
-            default:
-                break
+        guard socketFD < 0 else { return }
+
+        let fd = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
+        guard fd >= 0 else {
+            let err = errno
+            audioLogger.error("AppleJaxReceiver socket() failed: errno=\(err, privacy: .public)")
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(err))
+        }
+
+        // Allow rapid relaunch — old socket may still be in TIME_WAIT briefly.
+        var reuse: Int32 = 1
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &reuse, socklen_t(MemoryLayout<Int32>.size))
+
+        // Bump the kernel receive buffer so a brief CPU stall on the render thread
+        // can't drop datagrams that have already arrived at the NIC.
+        var rcvBuf: Int32 = 256 * 1024
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rcvBuf, socklen_t(MemoryLayout<Int32>.size))
+
+        // Bind to 0.0.0.0:port (any interface).
+        var addr = sockaddr_in()
+        addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = in_port_t(port).bigEndian
+        addr.sin_addr.s_addr = in_addr_t(INADDR_ANY).bigEndian
+        let bindResult = withUnsafePointer(to: &addr) { addrPtr -> Int32 in
+            addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                Darwin.bind(fd, saPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        listener.newConnectionHandler = { [weak self] conn in
-            self?.adopt(flow: conn)
+        guard bindResult == 0 else {
+            let err = errno
+            audioLogger.error("AppleJaxReceiver bind() failed: errno=\(err, privacy: .public)")
+            Darwin.close(fd)
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(err))
         }
-        listener.start(queue: queue)
-        self.listener = listener
+
+        socketFD = fd
+
+        // Async drain on the receiver queue. The read source fires whenever there
+        // are bytes in the kernel buffer; we recvfrom in a loop until EAGAIN to
+        // service all queued datagrams in one wakeup.
+        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
+        source.setEventHandler { [weak self] in
+            self?.drainSocket()
+        }
+        source.setCancelHandler {
+            Darwin.close(fd)
+        }
+        source.resume()
+        readSource = source
+
         setIsPlaying(true)
+        setListenPort(port)
+        audioLogger.notice("AppleJaxReceiver UDP listening on \(self.port, privacy: .public) (BSD socket)")
         startClientTimeoutMonitor()
     }
 
@@ -131,12 +184,9 @@ final class AppleJaxReceiver: AudioSource {
     func stop() {
         queue.async { [weak self] in
             guard let self else { return }
-            for (_, conn) in self.flows {
-                conn.cancel()
-            }
-            self.flows.removeAll()
-            self.listener?.cancel()
-            self.listener = nil
+            self.readSource?.cancel()  // closes FD via cancel handler
+            self.readSource = nil
+            self.socketFD = -1
             self.clientTimer?.cancel()
             self.clientTimer = nil
             self.setListenPort(0)
@@ -149,82 +199,74 @@ final class AppleJaxReceiver: AudioSource {
         setIsPlaying(false)
     }
 
-    // MARK: - UDP flow lifecycle
+    // MARK: - Datagram drain
 
-    private func adopt(flow conn: NWConnection) {
-        let id = ObjectIdentifier(conn)
-        flows[id] = conn
-        conn.stateUpdateHandler = { [weak self, weak conn] state in
-            guard let self, let conn else { return }
-            switch state {
-            case .ready:
-                self.receiveLoop(on: conn)
-            case .failed, .cancelled:
-                self.flows.removeValue(forKey: ObjectIdentifier(conn))
-            default:
+    /// Called from the DispatchSource on the receiver queue. Drains the kernel
+    /// buffer in a non-blocking loop so multiple queued datagrams are serviced in
+    /// one wakeup; otherwise we'd spin one wakeup per packet.
+    private func drainSocket() {
+        let fd = socketFD
+        guard fd >= 0 else { return }
+
+        var fromAddr = sockaddr_storage()
+        let addrSize = socklen_t(MemoryLayout<sockaddr_storage>.size)
+
+        while true {
+            var fromLen = addrSize
+            let n = withUnsafeMutablePointer(to: &fromAddr) { addrPtr -> Int in
+                addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                    Darwin.recvfrom(fd, recvBuffer, Self.recvBufferSize, Int32(MSG_DONTWAIT), saPtr, &fromLen)
+                }
+            }
+            if n <= 0 {
+                let err = errno
+                if n < 0 && err != EAGAIN && err != EWOULDBLOCK && err != EINTR {
+                    audioLogger.error("AppleJaxReceiver recvfrom errno=\(err, privacy: .public)")
+                }
                 break
             }
-        }
-        conn.start(queue: queue)
-    }
-
-    private func receiveLoop(on conn: NWConnection) {
-        // receiveMessage gives us exactly one UDP datagram per call — boundary-preserving.
-        // For TCP this would have to be `receive(min:max:)` with manual reframing.
-        conn.receiveMessage { [weak self, weak conn] data, _, isComplete, error in
-            guard let self, let conn else { return }
-            if let data, !data.isEmpty {
-                self.handleDatagram(data, source: conn.endpoint)
-            }
-            if let error {
-                audioLogger.error("AppleJaxReceiver flow receive error: \(error.localizedDescription)")
-                conn.cancel()
-                return
-            }
-            if isComplete {
-                conn.cancel()
-                return
-            }
-            self.receiveLoop(on: conn)
+            let data = Data(bytes: recvBuffer, count: n)
+            let source = describeSockaddr(&fromAddr)
+            handleDatagram(data, sourceDescription: source)
         }
     }
 
     // MARK: - Datagram parse + ingest
 
-    private func handleDatagram(_ data: Data, source endpoint: NWEndpoint) {
+    private func handleDatagram(_ data: Data, sourceDescription source: String) {
         bytesIn += data.count
 
         // Validate magic + length header.
         guard data.count >= Self.headerSize else { return }
         let m = AppleJaxReceiver.magic
-        guard data[data.startIndex]     == m[0],
-              data[data.startIndex + 1] == m[1],
-              data[data.startIndex + 2] == m[2],
-              data[data.startIndex + 3] == m[3] else {
-            // Stray non-APJX datagram (port scanner, mDNS bleed, etc) — ignore.
+        guard data[0] == m[0], data[1] == m[1], data[2] == m[2], data[3] == m[3] else {
             return
         }
-        let lenBase = data.startIndex + 4
-        let sampleCount: UInt32 = (UInt32(data[lenBase])
-            | (UInt32(data[lenBase + 1]) << 8)
-            | (UInt32(data[lenBase + 2]) << 16)
-            | (UInt32(data[lenBase + 3]) << 24))
+        let sampleCount: UInt32 = (UInt32(data[4])
+            | (UInt32(data[5]) << 8)
+            | (UInt32(data[6]) << 16)
+            | (UInt32(data[7]) << 24))
         let payloadBytes = Int(sampleCount) * 4
         guard payloadBytes > 0,
-              sampleCount <= 8192,                       // sanity cap
+              sampleCount <= 8192,
               data.count >= Self.headerSize + payloadBytes else {
             return
         }
 
-        let payload = data.subdata(in: (data.startIndex + Self.headerSize)..<(data.startIndex + Self.headerSize + payloadBytes))
+        let payload = data.subdata(in: Self.headerSize..<(Self.headerSize + payloadBytes))
         ingest(monoFloat32LE: payload)
 
         datagramsParsed += 1
         lastPacketAt = CFAbsoluteTimeGetCurrent()
+
+        #if DEBUG
+        recordDebugDatagram(data, payload: payload, sampleCount: sampleCount, receivedAt: lastPacketAt)
+        #endif
+
         if !hasClientFlag {
             hasClientFlag = true
-            setClientDescription(describe(endpoint: endpoint))
-            audioLogger.notice("AppleJaxReceiver UDP first packet from \(self.describe(endpoint: endpoint), privacy: .public)")
+            setClientDescription(source)
+            audioLogger.notice("AppleJaxReceiver UDP first packet from \(source, privacy: .public)")
             onClientChange?(true)
         }
         emitDiagnosticIfDue()
@@ -239,7 +281,6 @@ final class AppleJaxReceiver: AudioSource {
             data.copyBytes(to: dst, count: monoCount * 4)
         }
 
-        // 22050 → 48000 linear resample, mono → interleaved stereo (L = R).
         let ratio = AppleJaxReceiver.resampleRatio
         let outFrames = max(1, Int(Double(monoCount - 1) / ratio) + 1)
         var stereo = [Float](repeating: 0, count: outFrames * 2)
@@ -263,8 +304,6 @@ final class AppleJaxReceiver: AudioSource {
 
     // MARK: - Client-connected timeout
 
-    /// Polls every 0.5 s on the receiver queue. If we haven't seen a packet in
-    /// `connectedTimeoutSeconds`, transition to "no client" so the UI re-shows the QR.
     private func startClientTimeoutMonitor() {
         clientTimer?.cancel()
         let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -275,7 +314,7 @@ final class AppleJaxReceiver: AudioSource {
             if gap > Self.connectedTimeoutSeconds {
                 self.hasClientFlag = false
                 self.setClientDescription("(no client)")
-                audioLogger.notice("AppleJaxReceiver UDP client timed out (no packet for \(String(format: "%.2f", gap))s)")
+                audioLogger.notice("AppleJaxReceiver UDP client timed out (no packet for \(String(format: "%.2f", gap), privacy: .public)s)")
                 self.onClientChange?(false)
             }
         }
@@ -291,25 +330,65 @@ final class AppleJaxReceiver: AudioSource {
         }
         let elapsed = now - diagWindowStart
         guard elapsed >= 1.0 else { return }
-        audioLogger.notice("AppleJax UDP bytes=\(self.bytesIn) datagrams=\(self.datagramsParsed) pcmOut=\(self.pcmFramesEmitted) in \(String(format: "%.2f", elapsed))s")
+        audioLogger.notice("AppleJax UDP bytes=\(self.bytesIn, privacy: .public) datagrams=\(self.datagramsParsed, privacy: .public) pcmOut=\(self.pcmFramesEmitted, privacy: .public) in \(String(format: "%.2f", elapsed), privacy: .public)s")
         bytesIn = 0
         datagramsParsed = 0
         pcmFramesEmitted = 0
         diagWindowStart = now
     }
 
-    private func describe(endpoint: NWEndpoint) -> String {
-        switch endpoint {
-        case .hostPort(let host, let p): return "\(host):\(p)"
-        case .service(let name, _, _, _): return name
-        case .url(let url): return url.absoluteString
-        case .unix(let path): return path
-        case .opaque: return "(opaque)"
-        @unknown default: return "(unknown)"
+    private func describeSockaddr(_ addr: inout sockaddr_storage) -> String {
+        var hostBuf = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+        var portBuf = [CChar](repeating: 0, count: Int(NI_MAXSERV))
+        // Cache ss_len outside the inout pointer scope — Swift's exclusive-access
+        // rules forbid reading `addr.ss_len` inside `withUnsafePointer(to: &addr)`.
+        let addrLen = socklen_t(addr.ss_len)
+        let result = withUnsafePointer(to: &addr) { ptr -> Int32 in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                getnameinfo(saPtr, addrLen,
+                            &hostBuf, socklen_t(hostBuf.count),
+                            &portBuf, socklen_t(portBuf.count),
+                            NI_NUMERICHOST | NI_NUMERICSERV)
+            }
         }
+        guard result == 0 else { return "(unknown)" }
+        return "\(String(cString: hostBuf)):\(String(cString: portBuf))"
     }
+
+    #if DEBUG
+    private func recordDebugDatagram(_ data: Data, payload: Data, sampleCount: UInt32, receivedAt: TimeInterval) {
+        let hexCount = min(32, data.count)
+        var hex = ""
+        hex.reserveCapacity(hexCount * 3)
+        for i in 0..<hexCount {
+            if i > 0 { hex += " " }
+            hex += String(format: "%02x", data[i])
+        }
+        let sampleCountToDecode = min(6, payload.count / 4)
+        var samples = [Float](repeating: 0, count: sampleCountToDecode)
+        if sampleCountToDecode > 0 {
+            samples.withUnsafeMutableBytes { dst in
+                payload.copyBytes(to: dst, count: sampleCountToDecode * 4)
+            }
+        }
+        let entry = DebugDatagram(
+            receivedAt: receivedAt,
+            totalBytes: data.count,
+            sampleCount: sampleCount,
+            headerHex: hex,
+            firstSamples: samples
+        )
+        os_unfair_lock_lock(&debugLock)
+        _debugRing.append(entry)
+        if _debugRing.count > debugRingCap {
+            _debugRing.removeFirst(_debugRing.count - debugRingCap)
+        }
+        os_unfair_lock_unlock(&debugLock)
+    }
+    #endif
 
     deinit {
         stop()
+        recvBuffer.deallocate()
     }
 }

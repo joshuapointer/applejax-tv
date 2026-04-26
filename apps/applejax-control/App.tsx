@@ -43,6 +43,11 @@ export default function App() {
   const rmsRef = useRef(0);
   const sentChunksRef = useRef(0);
   const droppedRef = useRef(0);
+  // Counts every PCM event we receive from the native audio module, regardless
+  // of whether the send succeeds. Lets us tell "module isn't firing events"
+  // apart from "events fire but send is dropping them" in the diagnostic logs.
+  const pcmEventCountRef = useRef(0);
+  const lastDiagAtRef = useRef(0);
 
   // Lazily create the UDP socket on first use; keep it for the app lifetime.
   // We never close it on "disconnect" — we just clear targetRef so PCM events
@@ -62,6 +67,17 @@ export default function App() {
   useEffect(() => {
     const pcmSub = AppleJaxAudio.addListener('pcm', ({ data, rms: r }) => {
       rmsRef.current = r;
+      pcmEventCountRef.current += 1;
+      // Once per second, surface event/send/drop counts. If "events" climbs but
+      // "sent" doesn't, dgram.send is silently failing. If both stay at 1, the
+      // native iPhone audio module isn't firing repeatedly.
+      const nowMs = Date.now();
+      if (nowMs - lastDiagAtRef.current >= 1000) {
+        console.log(
+          `[appleJax] events=${pcmEventCountRef.current} sent=${sentChunksRef.current} dropped=${droppedRef.current} rms=${r.toFixed(4)}`
+        );
+        lastDiagAtRef.current = nowMs;
+      }
       const target = targetRef.current;
       if (!target) {
         droppedRef.current += 1;

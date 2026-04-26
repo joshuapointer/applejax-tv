@@ -167,6 +167,10 @@ final class VisualizerViewController: UIViewController {
         case .hidePresetBrowser:
             appState?.isPresetBrowserVisible = false
             inputHandler.setPresetBrowserVisible(false)
+        case .toggleDebugOverlay:
+            #if DEBUG
+            appState?.debugOverlayVisible.toggle()
+            #endif
         }
     }
 

@@ -319,7 +319,15 @@ public class AppleJaxAudioModule: Module {
         try engine.start()
         audioLog.info("Engine started (file)")
 
-        playerNode.scheduleFile(file, at: nil) { [weak self] in
+        // CRITICAL: use `.dataPlayedBack` instead of the default `.dataConsumed`.
+        // The default fires the completion when the player has *consumed* (read)
+        // the file's PCM into its render queue — for an in-memory MP3, that's
+        // a few ms. With the default we'd tear the engine down before the first
+        // tap buffer even gets a chance to render audio, producing exactly the
+        // "one chunk of silence then idle" pattern observed in the field.
+        // `.dataPlayedBack` fires only when audio has actually played out — i.e.
+        // when the file has actually finished playing.
+        playerNode.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
             guard let self else { return }
             self.engineQueue.async {
                 // Guard: user may have already called stopFile before natural playback end

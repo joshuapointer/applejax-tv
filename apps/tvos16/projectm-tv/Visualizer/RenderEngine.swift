@@ -285,7 +285,9 @@ final class RenderEngine: NSObject {
             let pumpRate = Double(audioFramesPumped) / elapsed
             // Use .notice so the line shows in Console.app live stream by default;
             // .info is memory-only on tvOS and silently dropped from streaming captures.
-            renderLogger.notice("RenderEngine fps=\(String(format: "%.1f", fps)) audio=\(String(format: "%.0f", pumpRate))fr/s amp=\(String(format: "%.4f", avgAmp))")
+            // Mark values .public so Console.app's live stream renders them instead of
+            // redacting to <private>. These are perf metrics, not user data — safe to expose.
+            renderLogger.notice("RenderEngine fps=\(String(format: "%.1f", fps), privacy: .public) audio=\(String(format: "%.0f", pumpRate), privacy: .public)fr/s amp=\(String(format: "%.4f", avgAmp), privacy: .public)")
             frameTickCount = 0
             audioFramesPumped = 0
             audioAmpAccum = 0

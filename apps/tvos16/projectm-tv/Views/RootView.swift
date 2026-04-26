@@ -21,6 +21,21 @@ struct RootView: View {
                 WaitingForClientView()
                     .transition(.opacity)
             }
+
+            #if DEBUG
+            if appState.debugOverlayVisible {
+                VStack {
+                    HStack {
+                        Spacer()
+                        DebugOverlayView()
+                            .padding(.top, 60)
+                            .padding(.trailing, 60)
+                    }
+                    Spacer()
+                }
+                .transition(.opacity)
+            }
+            #endif
         }
         .animation(.easeInOut(duration: 0.25), value: appState.appleJaxClientConnected)
         .task {

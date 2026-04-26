@@ -11,6 +11,15 @@ final class RemoteInputHandler {
     private var isOverlayVisible: Bool = false
     private var isPresetBrowserVisible: Bool = false
 
+    #if DEBUG
+    /// Single-tap select fires `toggleLock` after the double-tap window expires.
+    /// A second tap within the window cancels the pending work and fires
+    /// `toggleDebugOverlay` instead. The window is short enough to not feel laggy
+    /// for the lock toggle, but long enough to catch a typical double-tap.
+    private let selectDoubleTapWindow: TimeInterval = 0.35
+    private var pendingSelectWork: DispatchWorkItem?
+    #endif
+
     func setOverlayVisible(_ visible: Bool) {
         isOverlayVisible = visible
     }
@@ -40,7 +49,11 @@ final class RemoteInputHandler {
         case .downArrow:
             return emitDebounced(.shufflePresets)
         case .select:
+            #if DEBUG
+            handleSelectPress()
+            #else
             onCommand?(.toggleLock)
+            #endif
             return true
         case .menu:
             if isPresetBrowserVisible {
@@ -70,4 +83,25 @@ final class RemoteInputHandler {
         onCommand?(command)
         return true
     }
+
+    #if DEBUG
+    /// Defers the single-tap `toggleLock` so a second tap within the window can
+    /// upgrade it to `toggleDebugOverlay`. A bit of lag on lock-toggle is the
+    /// price of the gesture; release builds keep the immediate behavior.
+    private func handleSelectPress() {
+        if let pending = pendingSelectWork {
+            pending.cancel()
+            pendingSelectWork = nil
+            onCommand?(.toggleDebugOverlay)
+            return
+        }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingSelectWork = nil
+            self.onCommand?(.toggleLock)
+        }
+        pendingSelectWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + selectDoubleTapWindow, execute: work)
+    }
+    #endif
 }
