@@ -1,0 +1,6 @@
+{"t":0,"agent":"a77d41c","agent_type":"code-reviewer","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"ac7c809","agent_type":"architect","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a77d41c","agent_type":"code-reviewer","event":"agent_stop","success":true,"duration_ms":115939}
+{"t":0,"agent":"ac7c809","agent_type":"architect","event":"agent_stop","success":true,"duration_ms":150687}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"oh-my-claudecode:cancel"}
+{"t":0,"agent":"ada0a9d","agent_type":"unknown","event":"agent_stop","success":true}

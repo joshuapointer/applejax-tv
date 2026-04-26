@@ -45,6 +45,9 @@
 		F8B1B23FBD566C9046F8700C /* AudioEngineSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B261A1DDAAEF9F611575D77 /* AudioEngineSource.swift */; };
 		FD244167E0A5794ADD4D223A /* libprojectM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5674DF557E9B968F06EF5B7B /* libprojectM.xcframework */; };
 		FE2EF29C95E18C6A3DA57353 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907E8A0940A03655BFCDAB35 /* AppState.swift */; };
+		B1B1B1B1B1B1B1B1B1B1B1B1 /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A1A1 /* PerformanceMonitor.swift */; };
+		B2B2B2B2B2B2B2B2B2B2B2B2 /* MetalFXUpscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A2A2A2A2A2A2A2A2A2A2A2 /* MetalFXUpscaler.swift */; };
+		B3B3B3B3B3B3B3B3B3B3B3B3 /* RenderLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A3A3A3A3A3A3A3A3A3A3A3 /* RenderLoop.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +92,9 @@
 		F3FEB4C38B81EDE86FD94C80 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		FA20882B178157A3ACD5DAF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1122AABB3344CCDD5566EEFF /* presets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/presets; sourceTree = "<group>"; };
+		A1A1A1A1A1A1A1A1A1A1A1A1 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
+		A2A2A2A2A2A2A2A2A2A2A2A2 /* MetalFXUpscaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalFXUpscaler.swift; sourceTree = "<group>"; };
+		A3A3A3A3A3A3A3A3A3A3A3A3 /* RenderLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderLoop.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -218,10 +224,13 @@
 			isa = PBXGroup;
 			children = (
 				BA44AD56FF8C464458AF9D66 /* GLMetalBridge.swift */,
+				A2A2A2A2A2A2A2A2A2A2A2A2 /* MetalFXUpscaler.swift */,
 				9C73B56F467727875E27D5C0 /* MetalRenderer.swift */,
+				A1A1A1A1A1A1A1A1A1A1A1A1 /* PerformanceMonitor.swift */,
 				647BBE68FF8E329F00D43B76 /* ProjectMBridge.h */,
 				B42F52CFE8968EF77045E74D /* ProjectMBridge.m */,
 				5A1BBB01DAAAD89501AF79FF /* ProjectMRenderer.swift */,
+				A3A3A3A3A3A3A3A3A3A3A3A3 /* RenderLoop.swift */,
 				6229646C9180D197E49FD5CC /* VisualizerViewController.swift */,
 				3283B2F4F438ADBDC63B283A /* Shaders */,
 			);
@@ -346,6 +355,9 @@
 				52CE109D2066836DB3B54273 /* SourcePickerView.swift in Sources */,
 				7A61FBE75B2A2B858E78646B /* VisualizerContainerView.swift in Sources */,
 				33B81DD01BB5F88F66A7586C /* VisualizerViewController.swift in Sources */,
+				B1B1B1B1B1B1B1B1B1B1B1B1 /* PerformanceMonitor.swift in Sources */,
+				B2B2B2B2B2B2B2B2B2B2B2B2 /* MetalFXUpscaler.swift in Sources */,
+				B3B3B3B3B3B3B3B3B3B3B3B3 /* RenderLoop.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
