@@ -60,6 +60,6 @@ src/libprojectM/build/
 cmake-build-*
 .idea
 build-tvos/
-apps/tvos16/build/
-apps/tvos16/build-sim/
-apps/tvos16/.omc/
+apps/appleJax/build/
+apps/appleJax/build-sim/
+apps/appleJax/.omc/
