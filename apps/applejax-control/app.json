@@ -21,8 +21,10 @@
         "NSLocalNetworkUsageDescription": "appleJax Control streams audio data to the appleJax tvOS app on your local network.",
         "NSAppleMusicUsageDescription": "appleJax Control reads your local music library so you can stream owned tracks to the visualizer.",
         "UIBackgroundModes": [
+          "audio",
           "audio"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -51,6 +53,11 @@
         }
       ],
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4df698aa-08cd-43a3-ad0d-27984aab5c99"
+      }
+    }
   }
 }

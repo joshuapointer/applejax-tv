@@ -315,7 +315,7 @@ public class AppleJaxAudioModule: Module {
         mixerTapInstalled = true
 
         engine.prepare()
-        audioLog.info("Mixer output format (post-prepare): sr=\(engine.mainMixerNode.outputFormat(forBus: 0).sampleRate)")
+        audioLog.info("Mixer output format (post-prepare): sr=\(self.engine.mainMixerNode.outputFormat(forBus: 0).sampleRate)")
         try engine.start()
         audioLog.info("Engine started (file)")
 
